@@ -4,6 +4,7 @@ module Lib
     ( someFunc
     ) where
 
+import           Http
 import           Types
 
 someFunc :: IO ()

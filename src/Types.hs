@@ -1,4 +1,5 @@
-{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE DeriveGeneric         #-}
+{-# LANGUAGE DuplicateRecordFields #-}
 
 module Types
     ( GithubResponse (..)
@@ -37,26 +38,31 @@ data TravisResponse =
         ,   commit :: Text
     } deriving (Show , Generic)
 
+-- | email notification following succesful deploy
 data EmailResponse = EmailResponse {
         status :: Text
     ,   name   :: Text
     } deriving (Show)
 
+-- | repo to deploy
 data Repo = Repo {
         name               :: Text
     ,   branch             :: Text
-    ,   fileToDeploy       :: Maybe String
+    ,   fileToDeploy       :: Maybe String -- if not provided, container will be built from source
     ,   gitTag             :: Maybe String
-    ,   useTravisForStatus :: Boolean
+    ,   useTravisForStatus :: Bool
 } deriving (Show , Generic)
 
-data AppConf = DeployConf {
+data AppConf = AppConf {
        sshUser   :: Text  -- for ssh access
     ,  gEmail    :: Text    -- for use with gmail
     ,  gPassword :: Text  -- for emailing using gmail
-    ,  emails    :: [Text] -- to send notifications
+    ,  emails    :: [Text] -- emails to send notifications
     ,  repos     :: [Repo] -- repos to deploy, read from a json file
 } deriving (Show)
+
+instance FromJSON Repo
+instance ToJSON Repo
 
 instance FromJSON Repository
 instance ToJSON Repository
