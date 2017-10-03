@@ -6,6 +6,6 @@ It deploys succesful builds on host machines.
 
 Inner working.
 
-This services container's ssh public key is copied onto host machine so that the container can easily deploy containers to the host by way of ssh.
+This services container's ssh public key is copied onto host machine so that the container can easily deploy containers on host by way of ssh.
 
 This seems to be the most practical way of interfacing with a host machine while on docker to ochestrate other containers.
