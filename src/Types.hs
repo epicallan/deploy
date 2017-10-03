@@ -59,7 +59,10 @@ data AppConf = AppConf {
     ,  gPassword :: Text  -- for emailing using gmail
     ,  emails    :: [Text] -- emails to send notifications
     ,  repos     :: [Repo] -- repos to deploy, read from a json file
-} deriving (Show)
+} deriving (Show, Generic)
+
+instance FromJSON AppConf
+instance ToJSON AppConf
 
 instance FromJSON Repo
 instance ToJSON Repo
