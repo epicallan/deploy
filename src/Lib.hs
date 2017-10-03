@@ -5,22 +5,19 @@ module Lib (
         isDomainUp
     ,   runDeployBash
     ,   readConf) where
-import           Control.Exception      (SomeException, try)
-import           Control.Monad
-import           Control.Monad.IO.Class
-import           Data.Aeson             (eitherDecode)
-import qualified Data.ByteString.Lazy   as B
-import           Data.Maybe             (fromMaybe)
-import qualified Data.Text              as T
-import           Data.Text.IO           (hGetContents)
+import           Control.Exception    (SomeException, try)
+import           Data.Aeson           (eitherDecode)
+import qualified Data.ByteString.Lazy as B
+import           Data.Maybe           (fromMaybe)
+import qualified Data.Text            as T
+import           Data.Text.IO         (hGetContents)
 
-import           Network.HTTP.Simple    (Request, getResponseStatusCode,
-                                         httpLBS)
+import           Network.HTTP.Simple  (Request, getResponseStatusCode, httpLBS)
 import           Prelude
-import           System.Process         (CreateProcess (..),
-                                         StdStream (CreatePipe), createProcess,
-                                         proc)
-import           Types                  (AppConf)
+import           System.Process       (CreateProcess (..),
+                                       StdStream (CreatePipe), createProcess,
+                                       proc)
+import           Types                (AppConf)
 
 isDomainUp :: Request -> IO (Either String String)
 isDomainUp url = do
@@ -42,7 +39,7 @@ readConf jsonFile = do
 
 runDeployBash :: String -> Maybe [String] -> IO T.Text
 runDeployBash bashCmds args = do
-    (_, outHandle, _, _) <- createProcess (proc bashCmds $ fromMaybe [] args )
+    (_, outHandle, _, _) <- createProcess (proc bashCmds $ fromMaybe [] args ){ std_out = CreatePipe }
     case outHandle of
         Nothing     -> return "Failed to get handle, command possibly didnt run"
         Just handle -> hGetContents handle
