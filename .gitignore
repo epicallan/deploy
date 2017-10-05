@@ -21,3 +21,4 @@ cabal.project.local
 .ghc.environment.*TAGS
 TAGS
 .vscode
+src/Conf.hs
