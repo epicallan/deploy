@@ -1,10 +1,21 @@
 -- | routes handlers
-module Handlers where
-
-
+module Handlers (deploy) where
+import           Control.Monad.IO.Class        (liftIO)
+import           Data.Aeson                    (eitherDecode)
+import qualified Data.ByteString.Lazy.Internal as B
+import           Data.Maybe                    (maybe)
+import           Lib                           (getRepo, runDeployBash)
+import           Types                         (GithubResponse (..), Repo,
+                                                Repository (..))
 
 -- for deploy route / deploy route
--- config for sending emails
--- deploy :: Repo -> ReaderT AppConf IO (Either String String)
-
-
+deploy :: B.ByteString -> [Repo] -> IO ()
+deploy jsonRes repos =
+    case (eitherDecode jsonRes :: Either String GithubResponse) of
+        Left err -> print err
+        Right res -> case maybeRepo res of
+            Nothing   -> print $ "repo: " ++ show res ++ " not found"
+            Just repo -> runDeployBash repo >>= print
+    where
+        repoName res = name (repository res)
+        maybeRepo res =  getRepo (repoName res)  repos

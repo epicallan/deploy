@@ -9,6 +9,7 @@ import           Web.Spock.Config (PoolOrConn (..), defaultSpockCfg)
 
 data MySession = EmptySession
 newtype MyAppState = DummyAppState (IORef Int)
+type AppAction ctx a = SpockActionCtx ctx () MySession MyAppState a
 
 main :: IO ()
 main =
@@ -17,4 +18,7 @@ main =
        runSpock 8080 (spock spockCfg app)
 
 app :: SpockM () MySession MyAppState ()
-app = get root $ text "Hello World!"
+app =
+    do  get root $ text "Deploy server is live"
+        get "deploy" $ text "Deploy route"
+
