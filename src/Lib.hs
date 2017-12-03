@@ -1,69 +1,49 @@
-
-{-# LANGUAGE OverloadedStrings #-}
-
-module Lib (
-        isDomainUp
-    ,   runDeployBash
-    ,   getRepo
-    ,   readRepos
-    ,   sendEmail
+{-# LANGUAGE DataKinds     #-}
+{-# LANGUAGE TypeOperators #-}
+module Lib
+    ( startApp
+    , app
     ) where
-import           Control.Exception          (SomeException, try)
-import           Control.Monad.Trans.Reader
-import           Data.Aeson                 (eitherDecode)
-import qualified Data.ByteString.Lazy       as B
-import           Data.List                  (find)
-import           Data.Maybe                 (fromMaybe, maybe)
-import qualified Data.Text                  as T
-import           Data.Text.IO               (hGetContents)
-import qualified Data.Text.Lazy             as TL
-import           Network.HaskellNet.Auth    (AuthType (PLAIN))
-import           Network.HaskellNet.SMTP    (authenticate, doSMTPPort,
-                                             sendPlainTextMail)
-import           Network.HTTP.Simple        (Request, getResponseStatusCode,
-                                             httpLBS)
-import           Prelude
-import           System.Process             (CreateProcess (..),
-                                             StdStream (CreatePipe),
-                                             createProcess, shell)
-import           Types                      (EmailConf (..), Repo (..))
 
-isDomainUp :: Request -> IO (Either String String)
-isDomainUp url = do
-    eresponse <- try $ httpLBS url
-    return $ case eresponse of
-        Left err -> Left $ show (err :: SomeException)
-        Right response  -> checkStatus (getResponseStatusCode response :: Int)
-            where
-                checkStatus statusCode
-                    | statusCode == 200 = Right "site is live"
-                    | statusCode == 400  = Right "site is down"
-                    | otherwise = Right "site might be down, please check it"
+import           Control.Monad.IO.Class
+-- import           Data.Aeson
+-- import           Data.Aeson.TH
+-- import           Data.List
+import           GHC.Generics
+import           Network.Wai
+import           Network.Wai.Handler.Warp
+import           Servant
+import           Types                    (GithubResponse (..), Repo,
+                                           Repository (..), SSHKey (..),
+                                           Status (..))
+import           Utils                    (addKey)
 
--- TODO: should come from a data store
-readRepos :: FilePath -> IO (Either String [Repo])
-readRepos jsonFile = do
-    bJson <- B.readFile jsonFile
-    return (eitherDecode bJson :: Either String [Repo])
+type API = "deploy" :> ReqBody '[JSON] GithubResponse :> Post '[JSON] Repository
+    :<|> "addSSHKey" :> ReqBody '[JSON] SSHKey  :> Post '[JSON] Status
 
--- get repo; this should be a search in the db. currently we will look in a json file
-getRepo :: String -> [Repo] -> Maybe Repo
-getRepo reponame = find (\repo -> name repo == reponame)
+startApp :: IO ()
+startApp = run 8080 app
 
-runDeployBash :: Repo -> IO T.Text
-runDeployBash repo = do
-    (_, outHandle, _, _) <- createProcess (shell $ getCmds repo ){ std_out = CreatePipe }
-    case outHandle of
-        Nothing     -> return "Failed to get handle, command possibly didnt run"
-        Just handle -> hGetContents handle
-    where
-        getCmds repo = T.unpack $ bashScript repo
+app :: Application
+app = serve api server
 
+api :: Proxy API
+api = Proxy
 
--- send email
-sendEmail :: EmailConf -> IO ()
-sendEmail conf = doSMTPPort (smtpServer conf) (smtpPort conf) $ \conn -> do
-    authSucceed <- authenticate PLAIN (email conf) (password conf) conn
-    if authSucceed
-        then sendPlainTextMail "receiver@server.com" "sender@server.com" "subject" (TL.pack "Hello! This is the mail body!") conn
-        else print "Authentication failed."
+server :: Server API
+server = deploy
+    :<|> addSSHKey
+
+    where   deploy :: GithubResponse -> Handler Repository
+            deploy resp = do
+                liftIO $ print resp
+                return $ Repository "allan" "hey"
+            --- change to add repository
+            addSSHKey :: SSHKey -> Handler Status
+            addSSHKey (SSHKey _ key) = do
+                liftIO $ addKey key
+                return $ Status "success" "repo key added"
+
+            --- getDeploySSHKey
+
+            ---

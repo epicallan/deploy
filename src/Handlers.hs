@@ -4,9 +4,9 @@ import           Control.Monad.IO.Class        (liftIO)
 import           Data.Aeson                    (eitherDecode)
 import qualified Data.ByteString.Lazy.Internal as B
 import           Data.Maybe                    (maybe)
-import           Lib                           (getRepo, runDeployBash)
 import           Types                         (GithubResponse (..), Repo,
                                                 Repository (..))
+import           Utils                         (getRepo, runDeployBash)
 
 -- for deploy route / deploy route
 deploy :: B.ByteString -> [Repo] -> IO ()
