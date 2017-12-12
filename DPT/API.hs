@@ -1,6 +1,6 @@
 {-# LANGUAGE DataKinds     #-}
 {-# LANGUAGE TypeOperators #-}
-module Lib
+module DPT.API
     ( startApp
     , app
     ) where
