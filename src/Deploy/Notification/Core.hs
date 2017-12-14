@@ -1,7 +1,7 @@
 
 {-# LANGUAGE OverloadedStrings #-}
 
-module DPT.Notification.Core (
+module Deploy.Notification.Core (
         isDomainUp
     ,   sendEmail
     ) where

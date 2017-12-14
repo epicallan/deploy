@@ -1,7 +1,7 @@
 {-# LANGUAGE DeriveGeneric         #-}
 {-# LANGUAGE DuplicateRecordFields #-}
 
-module DPT.Deploy.Types
+module Deploy.Types
     (
     Repo (..)
     ) where
@@ -16,8 +16,15 @@ import           Prelude      hiding (id)
 data Repo = Repo {
         name   :: String
     ,   commit :: String
-    ,   port   :: Maybe Int -- port to deploy to
 } deriving (Show , Generic)
 
 instance FromJSON Repo
 instance ToJSON Repo
+
+data Status = Status {
+    status :: String
+,   info   :: String
+} deriving (Show, Generic)
+
+instance FromJSON Status
+instance ToJSON Status

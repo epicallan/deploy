@@ -1,4 +1,4 @@
-module DPT.Notification.Types
+module Deploy.Notification.Types
     (
         EmailConf (..)
     ) where
