@@ -5,6 +5,8 @@ module Deploy.Initiate.Core where
 import           Control.Exception.Safe                (IOException, catchIO)
 import           Control.Monad.Except
 import           Control.Monad.Trans.Reader
+import           Data.ByteString.Char8                 as BS hiding (getLine,
+                                                              putStrLn)
 import           Deploy.Types                          (Repo (..))
 import           Network.HTTP.Client                   (defaultManagerSettings,
                                                         httpLbs, newManager,
@@ -19,26 +21,33 @@ import           System.Process                        (callCommand,
 handlerIO :: IOException -> IO ()
 handlerIO ex = putStrLn $ "caught exception " ++ show ex
 
-archiveFiles :: ReaderT Repo IO ()
-archiveFiles = do
-  repo <- ask
-  liftIO $ catchIO (callCommand ("git archive --format=tar.gz --output" ++ path repo ++ ".tar.gz master ")) handlerIO
-
 getRepoDetails :: IO (Maybe Repo)
 getRepoDetails = do
   repoPath <- liftIO getCurrentDirectory
   repoName <- getLine
   pure $ Just (Repo repoName repoPath)
 
+archiveFiles :: ReaderT Repo IO ()
+archiveFiles = do
+  repo <- ask
+  liftIO $ catchIO (callCommand ("git archive --format=tar.gz --output" ++ path repo ++ ".tar.gz master ")) handlerIO
+
+
 uploadFile :: ReaderT Repo IO ()
 uploadFile = do
   repo <- ask
   manager <- liftIO $ newManager defaultManagerSettings
   req <- parseRequest "http://localhost:8080/deploy"
-  resp <- lift $ formDataBody form req >>=  flip httpLbs manager
+  resp <- lift $ formDataBody (form repo) req >>=  flip httpLbs manager
   liftIO $ print resp
   where
-    form = [ partBS "name" "repoName" , partFileSource "file" "path"]
+    form repo = [ partBS "name" (repoName repo), partFileSource "file" (archivePath repo)]
+
+    repoName :: Repo -> BS.ByteString
+    repoName repo = BS.pack $ name repo
+
+    archivePath :: Repo -> String
+    archivePath repo = path repo ++ ".tar.gz"
 
 
 runDeploy :: IO ()
@@ -50,3 +59,4 @@ runDeploy = do
       runReaderT archiveFiles repo
       runReaderT uploadFile repo
       putStrLn "success"
+
