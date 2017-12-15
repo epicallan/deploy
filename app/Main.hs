@@ -1,6 +1,6 @@
 module Main where
 
--- import           Lib
+import           Deploy.API (startApp)
 
--- main :: IO ()
--- main = startApp
+main :: IO ()
+main = startApp

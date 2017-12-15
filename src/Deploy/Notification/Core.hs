@@ -12,7 +12,7 @@ import           Data.Aeson                 (eitherDecode)
 import           Data.Monoid                ((<>))
 import           Data.Text.IO               (hGetContents)
 import qualified Data.Text.Lazy             as TL
-import           DPT.Notification.Types     (EmailConf (..))
+import           Deploy.Notification.Types  (EmailConf (..))
 import           Network.HaskellNet.Auth    (AuthType (PLAIN))
 import           Network.HaskellNet.SMTP    (authenticate, doSMTPPort,
                                              sendPlainTextMail)

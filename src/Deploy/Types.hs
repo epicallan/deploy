@@ -3,7 +3,8 @@
 
 module Deploy.Types
     (
-    Repo (..)
+        Repo (..)
+    ,   Status (..)
     ) where
 
 import           Data.Aeson   (FromJSON, ToJSON)
@@ -14,8 +15,8 @@ import           Prelude      hiding (id)
 
 -- | repo to deploy, this data can come from a data store or from a json file
 data Repo = Repo {
-        name   :: String
-    ,   commit :: String
+        name :: String
+    ,   path :: FilePath
 } deriving (Show , Generic)
 
 instance FromJSON Repo
@@ -25,6 +26,7 @@ data Status = Status {
     status :: String
 ,   info   :: String
 } deriving (Show, Generic)
+
 
 instance FromJSON Status
 instance ToJSON Status

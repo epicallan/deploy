@@ -2,21 +2,22 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TypeOperators     #-}
 
-module Deploy.API where
+module Deploy.API  (
+  startApp
+, upload
+ ) where
 
 import           Control.Concurrent
 import           Control.Exception
 import           Control.Monad
 import           Control.Monad.IO.Class
-import           Data.Text.Encoding                    (encodeUtf8)
-import           Network                               (withSocketsDo)
-import           Network.HTTP.Client                   hiding (Proxy)
-import           Network.HTTP.Client.MultipartFormData
 import           Network.Wai.Handler.Warp
 import           Servant
-import           Servant.Multipart
+import           Servant.Multipart        (Mem (..), MultipartData (..),
+                                           MultipartForm (..), fdFileName,
+                                           fdPayload, iName, iValue)
 
-import qualified Data.ByteString.Lazy                  as LBS
+import qualified Data.ByteString.Lazy     as LBS
 
 
 type API = "upload" :> MultipartForm Mem (MultipartData Mem) :> Post '[JSON] Integer
@@ -42,5 +43,5 @@ upload multipartData = do
       LBS.putStr content
   return 0
 
-startServer :: IO ()
-startServer = run 8080 (serve api upload)
+startApp :: IO ()
+startApp = run 8080 (serve api upload)
