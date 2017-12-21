@@ -25,7 +25,6 @@ type API = "upload" :> MultipartForm Mem (MultipartData Mem) :> Post '[JSON] Int
 api :: Proxy API
 api = Proxy
 
-
 -- MultipartData consists in textual inputs,
 -- accessible through its "inputs" field, as well
 -- as files, accessible through its "files" field.

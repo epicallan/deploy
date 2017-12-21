@@ -15,8 +15,8 @@ import           Prelude      hiding (id)
 
 -- | repo to deploy, this data can come from a data store or from a json file
 data Repo = Repo {
-        name :: String
-    ,   path :: FilePath
+        name :: Maybe String
+    ,   path :: Maybe FilePath
 } deriving (Show , Generic)
 
 instance FromJSON Repo

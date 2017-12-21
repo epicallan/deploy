@@ -2,12 +2,15 @@
 
 module Deploy.Initiate.Core where
 
-import           Control.Exception.Safe                (IOException, catchIO)
-import           Control.Monad.Except
+import           Control.Exception.Safe                (catchIO)
+import           Control.Monad.IO.Class                (liftIO)
+import           Control.Monad.Trans.Class             (lift)
 import           Control.Monad.Trans.Reader
 import           Data.ByteString.Char8                 as BS hiding (getLine,
                                                               putStrLn)
+import           Data.Maybe
 import           Deploy.Types                          (Repo (..))
+import           Deploy.Util                           (handlerIO)
 import           Network.HTTP.Client                   (defaultManagerSettings,
                                                         httpLbs, newManager,
                                                         parseRequest)
@@ -18,19 +21,20 @@ import           System.Process                        (callCommand,
                                                         readCreateProcess,
                                                         shell)
 
-handlerIO :: IOException -> IO ()
-handlerIO ex = putStrLn $ "caught exception " ++ show ex
 
 getRepoDetails :: IO (Maybe Repo)
 getRepoDetails = do
   repoPath <- liftIO getCurrentDirectory
   repoName <- getLine
-  pure $ Just (Repo repoName repoPath)
+  pure $ Just (Repo (Just repoName) (Just repoPath))
 
 archiveFiles :: ReaderT Repo IO ()
 archiveFiles = do
   repo <- ask
-  liftIO $ catchIO (callCommand ("git archive --format=tar.gz --output" ++ path repo ++ ".tar.gz master ")) handlerIO
+  case path repo of
+    Just filePath ->
+      liftIO $ catchIO (callCommand ("git archive --format=tar.gz --output" ++ filePath ++ ".tar.gz master ")) handlerIO
+    Nothing -> liftIO $ putStrLn "repo has no valid name"
 
 
 uploadFile :: ReaderT Repo IO ()
@@ -44,10 +48,10 @@ uploadFile = do
     form repo = [ partBS "name" (repoName repo), partFileSource "file" (archivePath repo)]
 
     repoName :: Repo -> BS.ByteString
-    repoName repo = BS.pack $ name repo
+    repoName repo = BS.pack $ fromJust (name repo)
 
     archivePath :: Repo -> String
-    archivePath repo = path repo ++ ".tar.gz"
+    archivePath repo = fromJust (path repo) ++ ".tar.gz"
 
 
 runDeploy :: IO ()
