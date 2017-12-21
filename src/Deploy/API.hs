@@ -13,21 +13,19 @@ import           Control.Monad
 import           Control.Monad.IO.Class
 import           Network.Wai.Handler.Warp
 import           Servant
-import           Servant.Multipart        (Mem (..), MultipartData (..),
-                                           MultipartForm (..), fdFileName,
-                                           fdPayload, iName, iValue)
+import           Servant.Multipart        (MultipartData (..),
+                                           MultipartForm (..), Tmp (..),
+                                           fdFileName, fdPayload, iName, iValue)
 
 import qualified Data.ByteString.Lazy     as LBS
 
 
-type API = "upload" :> MultipartForm Mem (MultipartData Mem) :> Post '[JSON] Integer
+type API = "upload" :> MultipartForm Tmp (MultipartData Tmp) :> Post '[JSON] Integer
 
 api :: Proxy API
 api = Proxy
 
--- MultipartData consists in textual inputs,
--- accessible through its "inputs" field, as well
--- as files, accessible through its "files" field.
+-- this is a stub, to be replaced
 upload :: Server API
 upload multipartData = do
   liftIO $ do
