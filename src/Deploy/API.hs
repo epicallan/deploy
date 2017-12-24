@@ -41,8 +41,6 @@ instance FromMultipart Tmp Repo where
 
         filePath form = unpack <$> fmap fdFileName (lookupFile "file" form)
 
-
--- this is a stub, to be replaced
 routes :: Server API
 routes = uploadHandler
 
@@ -59,5 +57,5 @@ routes = uploadHandler
                 Right _  -> return "started container"
 
 
-startApp :: Repo -> IO ()
-startApp repo = run 8080 (serve api routes)
+startApp :: IO ()
+startApp = run 8080 (serve api routes)
