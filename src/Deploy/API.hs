@@ -1,44 +1,63 @@
-{-# LANGUAGE DataKinds         #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE TypeOperators     #-}
+{-# LANGUAGE DataKinds             #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE OverloadedStrings     #-}
+{-# LANGUAGE TypeOperators         #-}
 
 module Deploy.API  (
   startApp
-, upload
  ) where
 
 import           Control.Concurrent
-import           Control.Exception
 import           Control.Monad
 import           Control.Monad.IO.Class
+import           Control.Monad.Trans.Reader
+import           Data.Text                  (Text, pack, unpack)
+import           Deploy.Execute.Core        (buildContainer, runContainer,
+                                             unarchiveFile)
+import           Deploy.Types               (Repo (..))
+import           Docker.Client              hiding (name, path)
 import           Network.Wai.Handler.Warp
 import           Servant
-import           Servant.Multipart        (MultipartData (..),
-                                           MultipartForm (..), Tmp (..),
-                                           fdFileName, fdPayload, iName, iValue)
+import           Servant.Multipart          (FromMultipart, MultipartData (..),
+                                             MultipartForm (..), Tmp (..),
+                                             fdFileName, fdPayload,
+                                             fromMultipart, iName, iValue,
+                                             lookupFile, lookupInput)
 
-import qualified Data.ByteString.Lazy     as LBS
+import qualified Data.ByteString.Lazy       as LBS
 
 
-type API = "upload" :> MultipartForm Tmp (MultipartData Tmp) :> Post '[JSON] Integer
+type API = "upload" :> MultipartForm Tmp Repo :> Post '[JSON] String
 
 api :: Proxy API
 api = Proxy
 
+
+instance FromMultipart Tmp Repo where
+  fromMultipart form =
+    Just $ Repo (repoName form) (filePath form)
+      where
+        repoName form = unpack <$> lookupInput "name" form
+
+        filePath form = unpack <$> fmap fdFileName (lookupFile "file" form)
+
+
 -- this is a stub, to be replaced
-upload :: Server API
-upload multipartData = do
-  liftIO $ do
-    putStrLn "Inputs:"
-    forM_ (inputs multipartData) $ \input ->
-      putStrLn $ "  " ++ show (iName input)
-            ++ " -> " ++ show (iValue input)
+routes :: Server API
+routes = uploadHandler
 
-    forM_ (files multipartData) $ \file -> do
-      let content = fdPayload file
-      putStrLn $ "Content of " ++ show (fdFileName file)
-      LBS.putStr content
-  return 0
+  where uploadHandler :: Repo -> Handler String
+        uploadHandler repo = do
+          liftIO $ runReaderT unarchiveFile repo
+          ebuildResults <- liftIO $ runReaderT buildContainer repo
+          case ebuildResults of
+            Left err       -> return $ show err
+            Right id -> do
+              erunResult <- liftIO $ runContainer id
+              case erunResult of
+                Left err -> return $ show err
+                Right _  -> return "started container"
 
-startApp :: IO ()
-startApp = run 8080 (serve api upload)
+
+startApp :: Repo -> IO ()
+startApp repo = run 8080 (serve api routes)
