@@ -7,8 +7,6 @@ module Deploy.API  (
   startApp
  ) where
 
-import           Control.Concurrent
-import           Control.Monad
 import           Control.Monad.IO.Class
 import           Control.Monad.Trans.Reader
 import           Data.Text                  (Text, pack, unpack)
@@ -24,7 +22,6 @@ import           Servant.Multipart          (FromMultipart, MultipartData (..),
                                              fromMultipart, iName, iValue,
                                              lookupFile, lookupInput)
 
-import qualified Data.ByteString.Lazy       as LBS
 
 
 type API = "upload" :> MultipartForm Tmp Repo :> Post '[JSON] String
