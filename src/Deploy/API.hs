@@ -36,7 +36,7 @@ instance FromMultipart Tmp Repo where
       where
         repoName form = unpack <$> lookupInput "name" form
 
-        filePath form = fdPayload (lookupFile "file" form)
+        filePath form = fmap fdPayload (lookupFile "file" form)
 
 routes :: Server API
 routes = uploadHandler
