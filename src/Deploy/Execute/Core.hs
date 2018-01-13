@@ -21,8 +21,12 @@ unarchiveFile = do
   repo <- ask
   let filePath = fromJust $ path repo
   let repoName = fromJust $ name repo
-  liftIO $ callCommand ("mv "++ filePath ++ " /src/" ++ repoName ++ ".tgz")
-  liftIO $ callCommand ("tar xzvf /src/" ++ repoName ++ ".tgz")
+  liftIO $ callCommand ("mkdir " ++ repoDir repoName)
+  liftIO $ callCommand ("mv "++ filePath ++ " " ++ repoFilePath repoName)
+  liftIO $ callCommand ("tar xzvf " ++ repoFilePath repoName )
+  where
+  repoDir repoName = "/Users/allan/" ++ repoName
+  repoFilePath repoName = repoDir repoName ++ "/" ++ repoName ++ ".tar.gz "
 
 
 runDocker ::(MonadMask m, MonadIO m) => DockerT m b -> m b
@@ -45,7 +49,7 @@ buildContainer  = do
     buildOpts repo = defaultBuildOpts (imageName repo)
 
     dockerfilePath ::  Repo -> FilePath
-    dockerfilePath repo =  "/src" ++ fromJust (name repo)
+    dockerfilePath repo =  "/Users/allan/" ++ fromJust (name repo)
 
 
 runContainer :: ContainerID -> IO (Either DockerError ())
