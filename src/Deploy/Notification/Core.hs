@@ -5,19 +5,14 @@ module Deploy.Notification.Core (
         isDomainUp
     ,   sendEmail
     ) where
-import           Control.Exception          (SomeException, try)
-import           Control.Monad.IO.Class
-import           Control.Monad.Trans.Reader
-import           Data.Aeson                 (eitherDecode)
-import           Data.Monoid                ((<>))
-import           Data.Text.IO               (hGetContents)
-import qualified Data.Text.Lazy             as TL
-import           Deploy.Notification.Types  (EmailConf (..))
-import           Network.HaskellNet.Auth    (AuthType (PLAIN))
-import           Network.HaskellNet.SMTP    (authenticate, doSMTPPort,
-                                             sendPlainTextMail)
-import           Network.HTTP.Simple        (Request, getResponseStatusCode,
-                                             httpLBS)
+import           Control.Exception         (SomeException, try)
+import qualified Data.Text.Lazy            as TL
+import           Deploy.Notification.Types (EmailConf (..))
+import           Network.HaskellNet.Auth   (AuthType (PLAIN))
+import           Network.HaskellNet.SMTP   (authenticate, doSMTPPort,
+                                            sendPlainTextMail)
+import           Network.HTTP.Simple       (Request, getResponseStatusCode,
+                                            httpLBS)
 import           Prelude
 
 isDomainUp :: Request -> IO (Either String String)

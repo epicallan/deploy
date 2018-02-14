@@ -17,9 +17,7 @@ import           Network.HTTP.Client                   (defaultManagerSettings,
 import           Network.HTTP.Client.MultipartFormData (formDataBody, partBS,
                                                         partFileSource)
 import           System.Directory                      (getCurrentDirectory)
-import           System.Process                        (callCommand,
-                                                        readCreateProcess,
-                                                        shell)
+import           System.Process                        (callCommand)
 
 
 getRepoDetails :: IO (Maybe Repo)
@@ -56,8 +54,8 @@ uploadFile = do
 
 runDeploy :: IO ()
 runDeploy = do
-  repo <- getRepoDetails
-  case repo of
+  repoM <- getRepoDetails
+  case repoM of
     Nothing -> putStrLn "failed to get repo details"
     Just repo -> do
       runReaderT archiveFiles repo

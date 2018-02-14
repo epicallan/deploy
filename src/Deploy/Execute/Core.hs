@@ -9,11 +9,10 @@ import           Control.Monad.Catch        (MonadMask)
 import           Control.Monad.IO.Class     (MonadIO, liftIO)
 import           Control.Monad.Trans.Reader
 import           Data.Maybe
-import           Data.Text                  (Text, pack, unpack)
+import           Data.Text                  (Text, pack)
 import           Deploy.Types               (Repo (..))
 import           Docker.Client              hiding (name, path)
-import           System.Process             (callCommand, readCreateProcess,
-                                             shell)
+import           System.Process             (callCommand)
 
 
 unarchiveFile :: ReaderT Repo IO ()
@@ -39,7 +38,7 @@ buildContainer :: ReaderT Repo IO (Either DockerError ContainerID)
 buildContainer  = do
   repo <- ask
   runDocker $ do
-    r <- buildImageFromDockerfile (buildOpts repo) (dockerfilePath repo)
+    buildImageFromDockerfile (buildOpts repo) (dockerfilePath repo)
     createContainer (defaultCreateOpts (imageName repo)) Nothing
   where
     imageName:: Repo -> Text
@@ -53,5 +52,5 @@ buildContainer  = do
 
 
 runContainer :: ContainerID -> IO (Either DockerError ())
-runContainer containerId =liftIO $
-  runDocker $ startContainer defaultStartOpts containerId
+runContainer containerId' =liftIO $
+  runDocker $ startContainer defaultStartOpts containerId'
