@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Deploy.Initiate.Core where
+module Deploy.Initiate.Core (runDeploy) where
 
 import           Control.Exception.Safe                (catchIO)
 import           Control.Monad.IO.Class                (liftIO)

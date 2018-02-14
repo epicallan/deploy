@@ -39,6 +39,16 @@ library:
   - warp
   - mtl
 executables:
+  deploy-init:
+    main: Init.hs
+    source-dirs: app
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+      - base
+      - deploy
   deploy-exe:
     main: Main.hs
     source-dirs: app
@@ -49,7 +59,6 @@ executables:
     dependencies:
     - base
     - deploy
-    - text >=1.2.2.2
 tests:
   deploy-test:
     main: Spec.hs
