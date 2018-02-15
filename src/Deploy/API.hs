@@ -9,18 +9,15 @@ module Deploy.API  (
 
 import           Control.Monad.IO.Class
 import           Control.Monad.Trans.Reader
-import           Data.Text                  (Text, pack, unpack)
+import           Data.Text                  (unpack)
 import           Deploy.Execute.Core        (buildContainer, runContainer,
                                              unarchiveFile)
 import           Deploy.Types               (Repo (..))
-import           Docker.Client              hiding (name, path)
 import           Network.Wai.Handler.Warp
 import           Servant
-import           Servant.Multipart          (FromMultipart, MultipartData (..),
-                                             MultipartForm (..), Tmp (..),
-                                             fdFileName, fdPayload,
-                                             fromMultipart, iName, iValue,
-                                             lookupFile, lookupInput)
+import           Servant.Multipart          (FromMultipart, MultipartForm, Tmp,
+                                             fdPayload, fromMultipart, iName,
+                                             iValue, lookupFile, lookupInput)
 
 
 
@@ -34,9 +31,9 @@ instance FromMultipart Tmp Repo where
   fromMultipart form =
     Just $ Repo (repoName form) (filePath form)
       where
-        repoName form = unpack <$> lookupInput "name" form
+        repoName = (unpack <$>) . lookupInput "name"
 
-        filePath form = fmap fdPayload (lookupFile "file" form)
+        filePath = (fdPayload <$>) .lookupFile "file"
 
 routes :: Server API
 routes = uploadHandler
@@ -46,9 +43,9 @@ routes = uploadHandler
           liftIO $ runReaderT unarchiveFile repo
           ebuildResults <- liftIO $ runReaderT buildContainer repo
           case ebuildResults of
-            Left err       -> return $ show err
-            Right id -> do
-              erunResult <- liftIO $ runContainer id
+            Left err  -> return $ show err
+            Right id' -> do
+              erunResult <- liftIO $ runContainer id'
               case erunResult of
                 Left err -> return $ show err
                 Right _  -> return "started container"

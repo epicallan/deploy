@@ -39,7 +39,7 @@ uploadFile :: ReaderT Repo IO ()
 uploadFile = do
   repo <- ask
   manager <- liftIO $ newManager defaultManagerSettings
-  req <- parseRequest "http://localhost:8080/deploy"
+  req <- parseRequest "http://88.80.186.143:8080/deploy"
   resp <- lift $ formDataBody (form repo) req >>=  flip httpLbs manager
   liftIO $ print resp
   where

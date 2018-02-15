@@ -20,17 +20,15 @@ unarchiveFile = do
   repo <- ask
   let filePath = fromJust $ path repo
   let repoName = fromJust $ name repo
-  liftIO $ callCommand ("mkdir " ++ repoDir repoName)
+  liftIO $ callCommand ("mkdir " ++ "/" ++ repoName)
   liftIO $ callCommand ("mv "++ filePath ++ " " ++ repoFilePath repoName)
   liftIO $ callCommand ("tar xzvf " ++ repoFilePath repoName )
   where
-  repoDir repoName = "/Users/allan/" ++ repoName
-  repoFilePath repoName = repoDir repoName ++ "/" ++ repoName ++ ".tar.gz "
-
+    repoFilePath repoName = "/" ++ repoName ++ "/" ++ repoName ++ ".tar.gz "
 
 runDocker ::(MonadMask m, MonadIO m) => DockerT m b -> m b
 runDocker f = do
-  h <- defaultHttpHandler
+  h <- unixHttpHandler "/var/run/docker.sock" -- this file in the docker container is linked to the one on the host
   runDockerT (defaultClientOpts, h) f
 
 
