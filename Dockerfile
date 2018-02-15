@@ -14,4 +14,6 @@ RUN stack build
 
 RUN stack install
 
+EXPOSE 8080
+
 CMD ["deploy-exe"]

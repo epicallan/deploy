@@ -5,4 +5,4 @@ Inspired by now.js and [capatainduck](https://github.com/githubsaturn/captainduc
 # Install
 
 docker build -t deploy-hs .
-docker run -it -d -p 7777:9090 --name datahub-2-app datahub-2
+docker run -it -d -p 8080:8080 --name deploy-hs-app deploy-hs
