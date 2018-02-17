@@ -10,6 +10,8 @@ COPY . /src
 
 VOLUME ["/var/run/docker.sock"]
 
+RUN stack upgrade
+
 RUN stack build
 
 RUN stack install
