@@ -2,7 +2,7 @@
 
 Inspired by now.js and [capatainduck](https://github.com/githubsaturn/captainduckduck/issues)
 
-# Install & deploy with docker
+## Install & deploy with docker
 
 ```
 docker build -t deploy-hs .
