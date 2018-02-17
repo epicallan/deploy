@@ -1,4 +1,4 @@
-FROM haskell:8
+FROM haskell:8.2.1
 
 LABEL maintainer="epicallan.al@gmail.com"
 
