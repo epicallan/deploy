@@ -23,6 +23,7 @@ import           System.Process                        (callCommand)
 getRepoDetails :: IO (Maybe Repo)
 getRepoDetails = do
   repoPath <- liftIO getCurrentDirectory
+  putStrLn "enter repo name: "
   repoName <- getLine --- TODO: get from package.json or config file
   pure $ Just (Repo (Just repoName) (Just repoPath))
 
@@ -31,7 +32,7 @@ archiveFiles = do
   repo <- ask
   case path repo of
     Just filePath ->
-      liftIO $ catchIO (callCommand ("git archive --format=tar.gz --output" ++ filePath ++ ".tar.gz master ")) handlerIO
+      liftIO $ catchIO (callCommand ("git archive --format=tar.gz --output " ++ filePath ++ ".tar.gz master ")) handlerIO
     Nothing -> liftIO $ putStrLn "repo has no valid name"
 
 
