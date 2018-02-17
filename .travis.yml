@@ -1,45 +1,37 @@
 language: c
-
 cache:
   directories:
   - $HOME/.stack
-
-# The different configurations we want to test.
-#
-# We set the compiler values here to tell Travis to use a different
-# cache file per set of arguments.
 matrix:
   include:
   - env: ARGS="--resolver lts-10.3"
-    compiler: ": #stack 8.2.2"
-    addons: { apt: { packages: [libgmp-dev] } }
-
+    compiler: ': #stack 8.2.2'
+    addons:
+      apt:
+        packages:
+        - libgmp-dev
 before_install:
-# Using compiler above sets CC to an invalid value, so unset it
 - unset CC
-
-# Download and unpack the stack executable
 - export PATH=$HOME/.local/bin:$PATH
 - mkdir -p ~/.local/bin
-- travis_retry curl -L https://www.stackage.org/stack/linux-x86_64 | tar xz --wildcards --strip-components=1 -C ~/.local/bin '*/stack'
-
+- travis_retry curl -L https://www.stackage.org/stack/linux-x86_64 | tar xz --wildcards
+  --strip-components=1 -C ~/.local/bin '*/stack'
 install:
 - stack -j1 --no-terminal --install-ghc $ARGS test --bench --only-dependencies
-
 script:
 - stack -j1 --no-terminal $ARGS build
 - mkdir deploy-build
-- mv ./home/travis/build/epicallan/deploy/.stack-work/install/x86_64-linux/lts-10.3/8.2.2/bin/deploy-exe deploy-build/
-- mv ./home/travis/build/epicallan/deploy/.stack-work/install/x86_64-linux/lts-10.3/8.2.2/bin/deploy-init deploy-build/
+- mv ./home/travis/build/epicallan/deploy/.stack-work/install/x86_64-linux/lts-10.3/8.2.2/bin/deploy-exe
+  deploy-build/
+- mv ./home/travis/build/epicallan/deploy/.stack-work/install/x86_64-linux/lts-10.3/8.2.2/bin/deploy-init
+  deploy-build/
 - zip -q -r deploy-build.zip deploy-build
 deploy:
   provider: releases
   api_key:
-    secure: bszwAE9uRsIRqH080Ca7PWi+CH0VzLxkFVA/7ERcVFNau8mhMkhjR6oy/7zSXFtNIIKuVnQbJGfL7dTHpDB48c9Qp6TSJz4fnl2V9tuPfQzq5ytdtm51aXsP7BwWRwDfQ9RUgnP0O7vCYs4CbgJFmsJSHBlSkYZDpTQGpzgN6vIIlNtHvlihD93UivTnyiZra09vchzeAMjbc6rVUhwV9jdWDPGWM9khvl3pRYt2dgzRZWhS5SwO9kK3Y/a/AOAlXL7/lZGHA1J0b4sqMnZHNhEG/rL44h6LQuyrJD7lrLUhwlUKVjDksXLP2p6uAQvQWrRxsDa7nsThjP8SWV3pe4o1Hj/6DIhgd7vmVVWgyvVEJlxrqW43yfwp7BfJ/RL+qnFyYCIQ6v8hxMlNEBTd+wNJSvyaI9oNZbmyAJ6XbGPznX9TNdhqFgifZSH57s1iiXXLyo5q/70T2a5qoVPgNK8l/tzy2Kh0ohgnvcg4J5L0/XDVGIXmjCKsf9PDZZMKOMfvcEr369zKEzlGp5ZOGN0zXfQHm44Di1+Wgyd1IlZ0wBGycbYa56Ab5xtfVU4ZrzWAXJMrlRrHvTNnnlUJRCGxsTnKEcNiue3hgXu4rgDJzZ+QSCWTr/mWfJsmejl3iMExERSbg1RwcYCafbNpERNADILmHQfJjJgKQPk2duk=
-  file_glob: true
-  file: '/home/travis/build/epicallan/deploy/.stack-work/install/x86_64-linux/lts-10.3/8.2.2/bin/'
-  skip_cleanup: true
+    secure: CkTA6vj9W09EZg+Z+IAJxx0eFhPTXbTCWdku+Xsqe1cMMagj5lh56pTYx0o+zLitAlyuenuGZnL3mOrU/r/uzrV6L1sREUuQ5HCyo3UiFvqsOUI9qZ+9DUeSkx420J+jPSBJfNjm0EQxsHcLyVXQ3mOo2B0oo9G67+pPYqiJb0454C26gXo6CXNU6TtJlMNyhqV7DckePek0QQGHcptdcGm/5h7m02xkkmNrto5ghbYlwwBACKxwc0H9WRcP+2lvaTXiD94HFeIcC9DU1+xrqa3Rf/FiTj7J9g3MR0Ov3fBHSLK0HrSx0mmLB4ysszkv3wGEC7rxvostP1L0punnhjU2hqzRogDHaF5ClgyTQfmxWbvVlUsRL11h9NEQtuLlZNDIT0eQ1ZNzagzuWUomv/gATUU4aJa2h4fG09rlxSBNd13wGMbkTdbssBXWgYEnOSjCTJ9w1x7C5IEIBvVuYHg/iP7mj4G8TUlGEjNAllACuIBJbRZsCgIPPRMlJpDrH7rOGSuD/7Sw8MBAhOIUnq+Knd1+fYm2KfkynfYFg4Zu8/6D+PqXya76H4MqSWdgu1P5eeP5Lits3YOSj44uZkrsvpKsP0brFcLGuHaGQih0ONkXXfSIFoNT6dVya3LTYU6tSdsN8mzRJwp4dFBqmeiyiMvYQhgFUIo2aXCU2ZA=
+  file: ~/deploy-build.zip
   on:
     tags: true
-    repo: epicallan/deploy
     branch: 'master'
+    repo: epicallan/deploy
