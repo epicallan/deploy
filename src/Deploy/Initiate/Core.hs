@@ -23,7 +23,7 @@ import           System.Process                        (callCommand)
 getRepoDetails :: IO (Maybe Repo)
 getRepoDetails = do
   repoPath <- liftIO getCurrentDirectory
-  repoName <- getLine
+  repoName <- getLine --- TODO: get from package.json or config file
   pure $ Just (Repo (Just repoName) (Just repoPath))
 
 archiveFiles :: ReaderT Repo IO ()

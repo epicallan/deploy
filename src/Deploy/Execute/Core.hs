@@ -18,7 +18,7 @@ import           System.Process             (callCommand)
 unarchiveFile :: ReaderT Repo IO ()
 unarchiveFile = do
   repo <- ask
-  let filePath = fromJust $ path repo
+  let filePath = fromJust $ path repo -- TODO: refactor
   let repoName = fromJust $ name repo
   liftIO $ callCommand ("mkdir " ++ "/" ++ repoName)
   liftIO $ callCommand ("mv "++ filePath ++ " " ++ repoFilePath repoName)
@@ -35,18 +35,13 @@ runDocker f = do
 buildContainer :: ReaderT Repo IO (Either DockerError ContainerID)
 buildContainer  = do
   repo <- ask
+  let repoName    = fromJust $ name repo
+  let imageName   =  pack $ repoName ++  ":latest"
+  let  buildOpts  = defaultBuildOpts imageName
+  let  dockerfilePath  =  "/" ++ repoName ++ "/" ++ repoName
   runDocker $ do
-    buildImageFromDockerfile (buildOpts repo) (dockerfilePath repo)
-    createContainer (defaultCreateOpts (imageName repo)) Nothing
-  where
-    imageName:: Repo -> Text
-    imageName repo =  pack $ fromJust (name repo) ++  ":latest"
-
-    buildOpts :: Repo -> BuildOpts
-    buildOpts repo = defaultBuildOpts (imageName repo)
-
-    dockerfilePath ::  Repo -> FilePath
-    dockerfilePath repo =  "/Users/allan/" ++ fromJust (name repo)
+    buildImageFromDockerfile buildOpts dockerfilePath
+    createContainer (defaultCreateOpts imageName) Nothing
 
 
 runContainer :: ContainerID -> IO (Either DockerError ())
