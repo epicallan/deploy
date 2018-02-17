@@ -1,4 +1,4 @@
-FROM haskell:8.2.1
+FROM ubuntu:latest
 
 LABEL maintainer="epicallan.al@gmail.com"
 
@@ -10,11 +10,12 @@ COPY . /src
 
 VOLUME ["/var/run/docker.sock"]
 
-RUN stack upgrade
+RUN wget https://github.com/epicallan/deploy/releases/download/0.1.5/deploy-build.zip
 
-RUN stack build
+RUN unzip -q deploy-build.zip
 
-RUN stack install
+WORKDIR /src/deploy-build
+
 
 EXPOSE 8080
 
