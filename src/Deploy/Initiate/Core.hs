@@ -41,7 +41,7 @@ uploadFile :: ReaderT Repo IO ()
 uploadFile = do
   repo <- ask
   manager <- liftIO $ newManager defaultManagerSettings
-  req <- parseRequest "http://localhost:8888/upload"
+  req <- parseRequest "http://88.80.186.143:8888/upload"
   resp <- lift $ formDataBody (form repo) req >>=  flip httpLbs manager
   liftIO $ print resp
   where
