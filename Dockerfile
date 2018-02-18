@@ -8,7 +8,7 @@ WORKDIR /src
 
 RUN apt-get update
 
-RUN apt-get -y install wget unzip 
+RUN apt-get -y install wget unzip libgmp-dev 
 
 VOLUME ["/var/run/docker.sock"]
 
@@ -19,6 +19,3 @@ RUN unzip -q deploy-build.zip
 EXPOSE 8080
 
 CMD ["/src/deploy-build/deploy-exe"]
-
-
-
