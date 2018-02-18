@@ -12,19 +12,20 @@ import           Data.Maybe
 import           Data.Text                  (pack)
 import           Deploy.Types               (Repo (..))
 import           Docker.Client              hiding (name, path)
+import           System.Directory           (getHomeDirectory)
 import           System.Process             (callCommand)
 
 
 unarchiveFile :: ReaderT Repo IO ()
 unarchiveFile = do
   repo <- ask
-  let filePath = fromJust $ path repo -- TODO: refactor
-  let repoName = fromJust $ name repo
+  let filePath      = fromJust $ path repo -- TODO: refactor
+  let repoName      = fromJust $ name repo
+  let repoFilePath  = "~/" ++ repoName ++ "/" ++ repoName ++ ".tar.gz "
   liftIO $ callCommand ("mkdir " ++ "~/" ++ repoName)
-  liftIO $ callCommand ("mv "++ filePath ++ " " ++ repoFilePath repoName)
-  liftIO $ callCommand ("tar xzvf " ++ repoFilePath repoName )
-  where
-    repoFilePath repoName = "~/" ++ repoName ++ "/" ++ repoName ++ ".tar.gz "
+  liftIO $ callCommand ("mv "++ filePath ++ " " ++ repoFilePath)
+  liftIO $ callCommand ("tar xzvf " ++ repoFilePath ++ " -C "  ++ "~/" ++ repoName)
+
 
 runDocker ::(MonadMask m, MonadIO m) => DockerT m b -> m b
 runDocker f = do
@@ -35,13 +36,17 @@ runDocker f = do
 buildContainer :: ReaderT Repo IO (Either DockerError ContainerID)
 buildContainer  = do
   repo <- ask
-  let repoName    = fromJust $ name repo
-  let imageName   =  pack $ repoName ++  ":latest"
-  let  buildOpts  = defaultBuildOpts imageName
-  let  dockerfilePath  =  "~/" ++ repoName ++ "/" ++ repoName
+  let  repoName    = fromJust $ name repo
+  let  imageName   = pack $ repoName ++  ":latest"
   runDocker $ do
-    buildImageFromDockerfile buildOpts dockerfilePath
-    createContainer (defaultCreateOpts imageName) Nothing
+    ev <- getDockerVersion
+    case ev of
+      Left err -> return $ Left err
+      Right v -> do
+        liftIO $ putStrLn $ "host docker version: " ++ show v
+        ctxDir <- liftIO ((++ ("/" ++ repoName)) <$> getHomeDirectory)
+        buildImageFromDockerfile (defaultBuildOpts imageName) ctxDir
+        createContainer (defaultCreateOpts imageName) (Just $ pack repoName)
 
 
 runContainer :: ContainerID -> IO (Either DockerError ())
