@@ -28,7 +28,9 @@ type API = "upload" :> MultipartForm Tmp Repo :> Post '[JSON] String
 api :: Proxy API
 api = Proxy
 
-
+-- TODO: Increase timeout
+-- TODO: upload only changed files
+-- TODO: handle async exceptions better
 instance FromMultipart Tmp Repo where
   fromMultipart form =
     Just $ Repo (repoName form) (filePath form)

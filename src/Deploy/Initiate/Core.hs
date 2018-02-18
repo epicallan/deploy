@@ -36,7 +36,7 @@ archiveFiles = do
       liftIO $ catchIO (callCommand archiveCmd) handlerIO
     Nothing -> liftIO $ putStrLn "repo has no valid name"
 
-
+-- TODO: add progress bar
 uploadFile :: ReaderT Repo IO ()
 uploadFile = do
   repo <- ask
