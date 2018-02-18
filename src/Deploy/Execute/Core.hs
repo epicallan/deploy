@@ -45,6 +45,7 @@ buildContainer  = do
       Right v -> do
         liftIO $ putStrLn $ "host docker version: " ++ show v
         ctxDir <- liftIO ((++ ("/" ++ repoName)) <$> getHomeDirectory)
+        liftIO $ putStrLn $ "ctxDir: " ++ ctxDir
         buildImageFromDockerfile (defaultBuildOpts imageName) ctxDir
         createContainer (defaultCreateOpts imageName) (Just $ pack repoName)
 
