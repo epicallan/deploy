@@ -2,10 +2,10 @@
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 40a7c228a9e5efe054c644ecc5f441e733ff1d8870ee50cfce8359cd84a350a7
+-- hash: 195f8f65ea49ccbc24d520f2f8a75abeea9945a822124ce18d80ecfb516444a1
 
 name:           deploy
-version:        0.1.9
+version:        0.1.11
 category:       Web
 homepage:       https://github.com/epicallan/deploy#readme
 bug-reports:    https://github.com/epicallan/deploy/issues

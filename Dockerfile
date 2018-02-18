@@ -10,9 +10,7 @@ RUN apt-get update
 
 RUN apt-get -y install wget unzip libgmp-dev 
 
-VOLUME ["/var/run/docker.sock"]
-
-RUN wget https://github.com/epicallan/deploy/releases/download/0.1.9/deploy-build.zip
+RUN wget https://github.com/epicallan/deploy/releases/download/0.1.11/deploy-build.zip
 
 RUN unzip -q deploy-build.zip
 

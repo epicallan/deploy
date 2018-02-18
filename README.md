@@ -10,6 +10,6 @@ Inspired by now.js and [capatainduck](https://github.com/githubsaturn/captainduc
 ```
 docker build -t deploy-hs .
 
-docker run -it -d -p 8888:8888 --name deploy-hs-app deploy-hs
+docker run -it -d -p 8888:8888 --name -v /var/run/docker.sock:/var/run/docker.sock deploy-app deploy
 
 ```

@@ -19,12 +19,13 @@ import           System.Process             (callCommand)
 unarchiveFile :: ReaderT Repo IO ()
 unarchiveFile = do
   repo <- ask
-  let filePath      = fromJust $ path repo -- TODO: refactor
-  let repoName      = fromJust $ name repo
-  let repoFilePath  = "~/" ++ repoName ++ "/" ++ repoName ++ ".tar.gz "
-  liftIO $ callCommand ("mkdir " ++ "~/" ++ repoName)
-  liftIO $ callCommand ("mv "++ filePath ++ " " ++ repoFilePath)
-  liftIO $ callCommand ("tar xzvf " ++ repoFilePath ++ " -C "  ++ "~/" ++ repoName)
+  let filePath           = fromJust $ path repo -- TODO: refactor
+  let repoName           = fromJust $ name repo
+  let repoFilePath base  = base ++ repoName ++ "/" ++ repoName ++ ".tar.gz "
+  homePath <- liftIO getHomeDirectory
+  liftIO $ callCommand ("mkdir " ++ homePath ++ repoName)
+  liftIO $ callCommand ("mv "++ filePath ++ " " ++ repoFilePath homePath)
+  liftIO $ callCommand ("tar xzvf " ++ repoFilePath homePath ++ " -C "  ++ "~/" ++ repoName)
 
 
 runDocker ::(MonadMask m, MonadIO m) => DockerT m b -> m b
