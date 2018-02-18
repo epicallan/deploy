@@ -8,6 +8,8 @@ license: BSD3
 github: epicallan/deploy
 extra-source-files:
 - README.md
+ghc-options:
+  - -fno-warn-orphans
 library:
   source-dirs: src
   exposed-modules:

@@ -9,7 +9,7 @@ import           Control.Monad.Catch        (MonadMask)
 import           Control.Monad.IO.Class     (MonadIO, liftIO)
 import           Control.Monad.Trans.Reader
 import           Data.Maybe
-import           Data.Text                  (Text, pack)
+import           Data.Text                  (pack)
 import           Deploy.Types               (Repo (..))
 import           Docker.Client              hiding (name, path)
 import           System.Process             (callCommand)
@@ -20,11 +20,11 @@ unarchiveFile = do
   repo <- ask
   let filePath = fromJust $ path repo -- TODO: refactor
   let repoName = fromJust $ name repo
-  liftIO $ callCommand ("mkdir " ++ "/" ++ repoName)
+  liftIO $ callCommand ("mkdir " ++ "~/" ++ repoName)
   liftIO $ callCommand ("mv "++ filePath ++ " " ++ repoFilePath repoName)
   liftIO $ callCommand ("tar xzvf " ++ repoFilePath repoName )
   where
-    repoFilePath repoName = "/" ++ repoName ++ "/" ++ repoName ++ ".tar.gz "
+    repoFilePath repoName = "~/" ++ repoName ++ "/" ++ repoName ++ ".tar.gz "
 
 runDocker ::(MonadMask m, MonadIO m) => DockerT m b -> m b
 runDocker f = do
@@ -38,7 +38,7 @@ buildContainer  = do
   let repoName    = fromJust $ name repo
   let imageName   =  pack $ repoName ++  ":latest"
   let  buildOpts  = defaultBuildOpts imageName
-  let  dockerfilePath  =  "/" ++ repoName ++ "/" ++ repoName
+  let  dockerfilePath  =  "~/" ++ repoName ++ "/" ++ repoName
   runDocker $ do
     buildImageFromDockerfile buildOpts dockerfilePath
     createContainer (defaultCreateOpts imageName) Nothing

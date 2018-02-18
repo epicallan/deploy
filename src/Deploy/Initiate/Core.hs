@@ -31,8 +31,9 @@ archiveFiles :: ReaderT Repo IO ()
 archiveFiles = do
   repo <- ask
   case path repo of
-    Just filePath ->
-      liftIO $ catchIO (callCommand ("git archive --format=tar.gz --output " ++ filePath ++ ".tar.gz master ")) handlerIO
+    Just filePath -> do
+      let archiveCmd = "git archive --format=tar.gz --output " ++ filePath ++ ".tar.gz master"
+      liftIO $ catchIO (callCommand archiveCmd) handlerIO
     Nothing -> liftIO $ putStrLn "repo has no valid name"
 
 
@@ -40,7 +41,7 @@ uploadFile :: ReaderT Repo IO ()
 uploadFile = do
   repo <- ask
   manager <- liftIO $ newManager defaultManagerSettings
-  req <- parseRequest "http://88.80.186.143:8080/deploy"
+  req <- parseRequest "http://localhost:8888/upload"
   resp <- lift $ formDataBody (form repo) req >>=  flip httpLbs manager
   liftIO $ print resp
   where
@@ -61,5 +62,5 @@ runDeploy = do
     Just repo -> do
       runReaderT archiveFiles repo
       runReaderT uploadFile repo
-      putStrLn "success"
+      putStrLn "uploaded file success"
 

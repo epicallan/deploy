@@ -22,6 +22,8 @@ import           Servant.Multipart          (FromMultipart, MultipartForm, Tmp,
 
 
 type API = "upload" :> MultipartForm Tmp Repo :> Post '[JSON] String
+      :<|> "home" :> Get '[JSON] String
+
 
 api :: Proxy API
 api = Proxy
@@ -35,21 +37,25 @@ instance FromMultipart Tmp Repo where
 
         filePath = (fdPayload <$>) .lookupFile "file"
 
+uploadHandler :: Repo -> Handler String
+uploadHandler repo = do
+    liftIO $ print repo
+    liftIO $ runReaderT unarchiveFile repo
+    ebuildResults <- liftIO $ runReaderT buildContainer repo
+    case ebuildResults of
+      Left err  -> return $ show err
+      Right id' -> do
+        erunResult <- liftIO $ runContainer id'
+        case erunResult of
+          Left err -> return $ show err
+          Right _  -> return "started container"
+
+home :: Handler String
+home = return "Deploy API is live"
+
 routes :: Server API
-routes = uploadHandler
-
-  where uploadHandler :: Repo -> Handler String
-        uploadHandler repo = do
-          liftIO $ runReaderT unarchiveFile repo
-          ebuildResults <- liftIO $ runReaderT buildContainer repo
-          case ebuildResults of
-            Left err  -> return $ show err
-            Right id' -> do
-              erunResult <- liftIO $ runContainer id'
-              case erunResult of
-                Left err -> return $ show err
-                Right _  -> return "started container"
-
+routes =
+  uploadHandler :<|> home
 
 startApp :: IO ()
-startApp = run 8080 (serve api routes)
+startApp = run 8888 (serve api routes)
