@@ -12,20 +12,20 @@ import           Data.Maybe
 import           Data.Text                  (pack)
 import           Deploy.Types               (Repo (..))
 import           Docker.Client              hiding (name, path)
-import           System.Directory           (getHomeDirectory)
+-- import           System.Directory           (getHomeDirectory)
 import           System.Process             (callCommand)
 
 
+--TODO: use environment variabels to change root / base path for local development testing
 unarchiveFile :: ReaderT Repo IO ()
 unarchiveFile = do
   repo <- ask
   let filePath           = fromJust $ path repo -- TODO: refactor
   let repoName           = fromJust $ name repo
-  let repoFilePath base  = base ++ repoName ++ "/" ++ repoName ++ ".tar.gz "
-  homePath <- liftIO getHomeDirectory
-  liftIO $ callCommand ("mkdir " ++ homePath ++ repoName)
-  liftIO $ callCommand ("mv "++ filePath ++ " " ++ repoFilePath homePath)
-  liftIO $ callCommand ("tar xzvf " ++ repoFilePath homePath ++ " -C "  ++ "~/" ++ repoName)
+  let repoFilePath       = "/" ++ repoName ++ "/" ++ repoName ++ ".tar.gz "
+  liftIO $ callCommand ("mkdir " ++ "/" ++ repoName)
+  liftIO $ callCommand ("mv "++ filePath ++ " " ++ repoFilePath)
+  liftIO $ callCommand ("tar xzvf " ++ repoFilePath ++ " -C "  ++ "/" ++ repoName)
 
 
 runDocker ::(MonadMask m, MonadIO m) => DockerT m b -> m b
@@ -45,9 +45,9 @@ buildContainer  = do
       Left err -> return $ Left err
       Right v -> do
         liftIO $ putStrLn $ "host docker version: " ++ show v
-        ctxDir <- liftIO ((++ ("/" ++ repoName)) <$> getHomeDirectory)
-        liftIO $ putStrLn $ "ctxDir: " ++ ctxDir
-        buildImageFromDockerfile (defaultBuildOpts imageName) ctxDir
+        -- ctxDir <- liftIO ((++ ("/" ++ repoName)) <$> getHomeDirectory)
+        -- liftIO $ putStrLn $ "ctxDir: " ++ ctxDir
+        buildImageFromDockerfile (defaultBuildOpts imageName) ("/" ++ repoName)
         createContainer (defaultCreateOpts imageName) (Just $ pack repoName)
 
 
