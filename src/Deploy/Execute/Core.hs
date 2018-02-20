@@ -1,26 +1,23 @@
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE OverloadedStrings     #-}
-
 module Deploy.Execute.Core (
     buildContainer
   , runContainer
   , unarchiveFile) where
-import           Control.Monad.Catch        (MonadMask)
-import           Control.Monad.IO.Class     (MonadIO, liftIO)
-import           Control.Monad.Trans.Reader
+import           Control.Exception.Safe (MonadMask)
 import           Data.Maybe
-import           Data.Text                  (pack)
-import           Deploy.Types               (Repo (..))
-import           Docker.Client              hiding (name, path)
+import           Data.Text              (pack)
+import           Deploy.Types           (Repo (..))
+import           Docker.Client          hiding (name, path)
+import           Protolude
 -- import           System.Directory           (getHomeDirectory)
-import           System.Process             (callCommand)
+import           System.Process         (callCommand)
 
 
 --TODO: use environment variabels to change root / base path for local development testing
+-- TODO: delete any existing folder with same name as new archive
 unarchiveFile :: ReaderT Repo IO ()
 unarchiveFile = do
   repo <- ask
-  let filePath           = fromJust $ path repo -- TODO: refactor
+  let filePath           = fromJust $ path repo
   let repoName           = fromJust $ name repo
   let repoFilePath       = "/" ++ repoName ++ "/" ++ repoName ++ ".tar.gz "
   liftIO $ callCommand ("mkdir " ++ "/" ++ repoName)
@@ -33,22 +30,15 @@ runDocker f = do
   h <- unixHttpHandler "/var/run/docker.sock" -- this file in the docker container is linked to the one on the host
   runDockerT (defaultClientOpts, h) f
 
-
+-- TODO: publish the exposed port in docker file
 buildContainer :: ReaderT Repo IO (Either DockerError ContainerID)
 buildContainer  = do
   repo <- ask
   let  repoName    = fromJust $ name repo
   let  imageName   = pack $ repoName ++  ":latest"
   runDocker $ do
-    ev <- getDockerVersion
-    case ev of
-      Left err -> return $ Left err
-      Right v -> do
-        liftIO $ putStrLn $ "host docker version: " ++ show v
-        -- ctxDir <- liftIO ((++ ("/" ++ repoName)) <$> getHomeDirectory)
-        -- liftIO $ putStrLn $ "ctxDir: " ++ ctxDir
-        buildImageFromDockerfile (defaultBuildOpts imageName) ("/" ++ repoName)
-        createContainer (defaultCreateOpts imageName) (Just $ pack repoName)
+    buildImageFromDockerfile (defaultBuildOpts imageName) ("/" ++ repoName)
+    createContainer (defaultCreateOpts imageName) (Just $ pack repoName)
 
 
 runContainer :: ContainerID -> IO (Either DockerError ())

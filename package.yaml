@@ -10,6 +10,23 @@ extra-source-files:
 - README.md
 ghc-options:
   - -fno-warn-orphans
+  - -Wall
+  - -Wcompat
+  - -Wincomplete-record-updates
+  - -Wredundant-constraints
+
+default-extensions: 
+- OverloadedStrings
+- DataKinds
+- TypeOperators
+- NoImplicitPrelude 
+- DeriveGeneric 
+- RecordWildCards
+- ExtendedDefaultRules
+- FlexibleContexts
+- FlexibleInstances
+- MultiParamTypeClasses
+
 library:
   source-dirs: src
   exposed-modules:
@@ -20,13 +37,13 @@ library:
   - Deploy.Util
   dependencies:
   - base >=4.7 && <5
+  - protolude >= 0.2
   - text >=1.2.2.2
   - bytestring >=0.10.8.1
   - aeson
   - http-conduit
   - http-types
   - safe-exceptions
-  - exceptions
   - bytestring
   - docker >=0.4.1.1
   - directory
@@ -39,7 +56,6 @@ library:
   - servant-server
   - wai
   - warp
-  - mtl
 executables:
   deploy-init:
     main: Main.hs
@@ -50,6 +66,7 @@ executables:
     - -with-rtsopts=-N
     dependencies:
       - base
+      - protolude >= 0.2
       - deploy
   deploy-exe:
     main: Main.hs
@@ -60,6 +77,7 @@ executables:
     - -with-rtsopts=-N
     dependencies:
     - base
+    - protolude >= 0.2
     - deploy
 tests:
   deploy-test:

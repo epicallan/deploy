@@ -1,8 +1,7 @@
-{-# LANGUAGE OverloadedStrings #-}
-
 module Deploy.Util where
 
 import           Control.Exception.Safe (IOException)
+import           Protolude
 
 
 

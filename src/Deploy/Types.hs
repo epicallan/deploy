@@ -1,5 +1,3 @@
-{-# LANGUAGE DeriveGeneric         #-}
-{-# LANGUAGE DuplicateRecordFields #-}
 
 module Deploy.Types
     (
@@ -8,8 +6,10 @@ module Deploy.Types
     ) where
 
 import           Data.Aeson   (FromJSON, ToJSON)
+import           Data.String  (String)
 import           GHC.Generics (Generic)
-import           Prelude      hiding (id)
+import           Protolude
+
 
 
 -- | repo to deploy, this data can come from a data store or from a json file

@@ -1,8 +1,3 @@
-{-# LANGUAGE DataKinds             #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE OverloadedStrings     #-}
-{-# LANGUAGE TypeOperators         #-}
-
 module Deploy.API  (
   startApp
  ) where
@@ -14,6 +9,8 @@ import           Deploy.Execute.Core        (buildContainer, runContainer,
                                              unarchiveFile)
 import           Deploy.Types               (Repo (..))
 import           Network.Wai.Handler.Warp
+import Data.String (String)
+import           Protolude
 import           Servant
 import           Servant.Multipart          (FromMultipart, MultipartForm, Tmp,
                                              fdPayload, fromMultipart, iName,

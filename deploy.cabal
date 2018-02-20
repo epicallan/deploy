@@ -2,10 +2,10 @@
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 195f8f65ea49ccbc24d520f2f8a75abeea9945a822124ce18d80ecfb516444a1
+-- hash: 936a75484a32b9e3d3feac238f46e5b17cc21c46fefffe0ec361340380c569fc
 
 name:           deploy
-version:        0.1.11
+version:        0.1.12
 category:       Web
 homepage:       https://github.com/epicallan/deploy#readme
 bug-reports:    https://github.com/epicallan/deploy/issues
@@ -27,7 +27,8 @@ source-repository head
 library
   hs-source-dirs:
       src
-  ghc-options: -fno-warn-orphans
+  default-extensions: OverloadedStrings DataKinds TypeOperators NoImplicitPrelude DeriveGeneric RecordWildCards ExtendedDefaultRules FlexibleContexts FlexibleInstances MultiParamTypeClasses
+  ghc-options: -fno-warn-orphans -Wall -Wcompat -Wincomplete-record-updates -Wredundant-constraints
   build-depends:
       HaskellNet >=0.5.1
     , aeson
@@ -35,13 +36,12 @@ library
     , bytestring
     , directory
     , docker >=0.4.1.1
-    , exceptions
     , http-client >=0.5.7.0
     , http-conduit
     , http-types
-    , mtl
     , network >=2.6.3.2
     , process >=1.4.3.0
+    , protolude >=0.2
     , safe-exceptions
     , servant-multipart >=0.11
     , servant-server
@@ -66,10 +66,12 @@ executable deploy-exe
   main-is: Main.hs
   hs-source-dirs:
       app
-  ghc-options: -fno-warn-orphans -threaded -rtsopts -with-rtsopts=-N
+  default-extensions: OverloadedStrings DataKinds TypeOperators NoImplicitPrelude DeriveGeneric RecordWildCards ExtendedDefaultRules FlexibleContexts FlexibleInstances MultiParamTypeClasses
+  ghc-options: -fno-warn-orphans -Wall -Wcompat -Wincomplete-record-updates -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       base
     , deploy
+    , protolude >=0.2
   other-modules:
       Paths_deploy
   default-language: Haskell2010
@@ -78,10 +80,12 @@ executable deploy-init
   main-is: Main.hs
   hs-source-dirs:
       cli
-  ghc-options: -fno-warn-orphans -threaded -rtsopts -with-rtsopts=-N
+  default-extensions: OverloadedStrings DataKinds TypeOperators NoImplicitPrelude DeriveGeneric RecordWildCards ExtendedDefaultRules FlexibleContexts FlexibleInstances MultiParamTypeClasses
+  ghc-options: -fno-warn-orphans -Wall -Wcompat -Wincomplete-record-updates -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       base
     , deploy
+    , protolude >=0.2
   other-modules:
       Paths_deploy
   default-language: Haskell2010
@@ -91,7 +95,8 @@ test-suite deploy-test
   main-is: Spec.hs
   hs-source-dirs:
       test
-  ghc-options: -fno-warn-orphans -threaded -rtsopts -with-rtsopts=-N
+  default-extensions: OverloadedStrings DataKinds TypeOperators NoImplicitPrelude DeriveGeneric RecordWildCards ExtendedDefaultRules FlexibleContexts FlexibleInstances MultiParamTypeClasses
+  ghc-options: -fno-warn-orphans -Wall -Wcompat -Wincomplete-record-updates -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       base
     , deploy

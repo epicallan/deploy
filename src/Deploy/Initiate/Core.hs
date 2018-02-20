@@ -1,14 +1,11 @@
-{-# LANGUAGE OverloadedStrings #-}
-
 module Deploy.Initiate.Core (runDeploy) where
 
 import           Control.Exception.Safe                (catchIO)
-import           Control.Monad.IO.Class                (liftIO)
-import           Control.Monad.Trans.Class             (lift)
-import           Control.Monad.Trans.Reader
 import           Data.ByteString.Char8                 as BS hiding (getLine,
                                                               putStrLn)
 import           Data.Maybe
+import           Data.String                           (String)
+import           Data.Text                             as T
 import           Deploy.Types                          (Repo (..))
 import           Deploy.Util                           (handlerIO)
 import           Network.HTTP.Client                   (defaultManagerSettings,
@@ -16,6 +13,7 @@ import           Network.HTTP.Client                   (defaultManagerSettings,
                                                         parseRequest)
 import           Network.HTTP.Client.MultipartFormData (formDataBody, partBS,
                                                         partFileSource)
+import           Protolude
 import           System.Directory                      (getCurrentDirectory)
 import           System.Process                        (callCommand)
 
@@ -23,9 +21,9 @@ import           System.Process                        (callCommand)
 getRepoDetails :: IO (Maybe Repo)
 getRepoDetails = do
   repoPath <- liftIO getCurrentDirectory
-  putStrLn "enter repo name: "
+  print "enter repo name: "
   repoName <- getLine --- TODO: get from package.json or config file
-  pure $ Just (Repo (Just repoName) (Just repoPath))
+  pure $ Just (Repo (Just $ T.unpack repoName) (Just repoPath))
 
 archiveFiles :: ReaderT Repo IO ()
 archiveFiles = do
@@ -34,7 +32,7 @@ archiveFiles = do
     Just filePath -> do
       let archiveCmd = "git archive --format=tar.gz --output " ++ filePath ++ ".tar.gz master"
       liftIO $ catchIO (callCommand archiveCmd) handlerIO
-    Nothing -> liftIO $ putStrLn "repo has no valid name"
+    Nothing -> liftIO $ print "repo has no valid name"
 
 -- TODO: add progress bar
 uploadFile :: ReaderT Repo IO ()
@@ -62,5 +60,5 @@ runDeploy = do
     Just repo -> do
       runReaderT archiveFiles repo
       runReaderT uploadFile repo
-      putStrLn "uploaded file success"
+      print "uploaded file success"
 

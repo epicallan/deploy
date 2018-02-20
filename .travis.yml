@@ -19,7 +19,7 @@ before_install:
 install:
 - stack -j1 --no-terminal --install-ghc $ARGS test --bench --only-dependencies
 script:
-- stack -j1 --no-terminal $ARGS build
+- stack -j1 --no-terminal $ARGS build --ghc-options=-Werror
 - mkdir deploy-build
 - mv .stack-work/install/x86_64-linux/lts-10.3/8.2.2/bin/deploy-exe
   deploy-build/
