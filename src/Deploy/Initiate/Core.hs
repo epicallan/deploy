@@ -69,9 +69,9 @@ archiveFiles = do
       in  callCommand archiveCmd
     zipFiles :: [Text] -> IO ()
     zipFiles files =
-      let newTempDirCmd   = callCommand "mkdir .temp"
-          copyIntoTempCmd = mapM_ (\x -> callCommand $ unpack $ x <> "cp") files
-      in  newTempDirCmd  >> copyIntoTempCmd  >> callCommand "zip"
+      let newTempDirCmd   = callCommand "mkdir .temp" -- TODO:
+          copyIntoTempCmd = mapM_ (\x -> callCommand $ unpack $ x <> "cp") files -- TODO:
+      in  newTempDirCmd  >> copyIntoTempCmd  >> callCommand "zip" -- TODO:
 
 
 
