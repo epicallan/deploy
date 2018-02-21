@@ -4,7 +4,7 @@ module Deploy.API  (
 
 import           Control.Monad.IO.Class
 import           Control.Monad.Trans.Reader
-import           Data.Text                  (unpack)
+import           Data.Text                  (pack)
 import           Deploy.Execute.Core        (buildContainer, runContainer,
                                              unarchiveFile)
 import           Deploy.Types               (Repo (..))
@@ -13,8 +13,8 @@ import Data.String (String)
 import           Protolude
 import           Servant
 import           Servant.Multipart          (FromMultipart, MultipartForm, Tmp,
-                                             fdPayload, fromMultipart, iName,
-                                             iValue, lookupFile, lookupInput)
+                                             fdPayload, fromMultipart, 
+                                             lookupFile, lookupInput)
 
 
 
@@ -30,11 +30,11 @@ api = Proxy
 -- TODO: handle async exceptions better
 instance FromMultipart Tmp Repo where
   fromMultipart form =
-    Just $ Repo (repoName form) (filePath form)
+    Just $ Repo (repoName' form) (filePath form) Nothing
       where
-        repoName = (unpack <$>) . lookupInput "name"
+        repoName' = lookupInput "name"
 
-        filePath = (fdPayload <$>) .lookupFile "file"
+        filePath = (pack . fdPayload <$>) .lookupFile "file"
 
 uploadHandler :: Repo -> Handler String
 uploadHandler repo = do

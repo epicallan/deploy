@@ -34,4 +34,4 @@ sendEmail conf =
     authSucceed <- authenticate PLAIN (email conf) (password conf) conn
     if authSucceed
         then sendPlainTextMail "receiver@server.com" "sender@server.com" "subject" (TL.pack "Hello! This is the mail body!") conn
-        else print "Authentication failed."
+        else print ("Authentication failed." :: Text)

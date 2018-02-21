@@ -9,15 +9,16 @@ github: epicallan/deploy
 extra-source-files:
 - README.md
 ghc-options:
-  - -fno-warn-orphans
   - -Wall
   - -Wcompat
   - -Wincomplete-record-updates
   - -Wredundant-constraints
+  - -fno-warn-orphans
 
 default-extensions: 
 - OverloadedStrings
 - DataKinds
+- ScopedTypeVariables
 - TypeOperators
 - NoImplicitPrelude 
 - DeriveGeneric 
@@ -34,7 +35,6 @@ library:
   - Deploy.Types
   - Deploy.Execute.Core
   - Deploy.Initiate.Core
-  - Deploy.Util
   dependencies:
   - base >=4.7 && <5
   - protolude >= 0.2
@@ -56,6 +56,9 @@ library:
   - servant-server
   - wai
   - warp
+  - ghc
+  - dhall
+  - unix
 executables:
   deploy-init:
     main: Main.hs

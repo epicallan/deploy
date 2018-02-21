@@ -4,7 +4,7 @@ module Deploy.Execute.Core (
   , unarchiveFile) where
 import           Control.Exception.Safe (MonadMask)
 import           Data.Maybe
-import           Data.Text              (pack)
+import           Data.Text              (unpack)
 import           Deploy.Types           (Repo (..))
 import           Docker.Client          hiding (name, path)
 import           Protolude
@@ -17,12 +17,12 @@ import           System.Process         (callCommand)
 unarchiveFile :: ReaderT Repo IO ()
 unarchiveFile = do
   repo <- ask
-  let filePath           = fromJust $ path repo
-  let repoName           = fromJust $ name repo
-  let repoFilePath       = "/" ++ repoName ++ "/" ++ repoName ++ ".tar.gz "
-  liftIO $ callCommand ("mkdir " ++ "/" ++ repoName)
-  liftIO $ callCommand ("mv "++ filePath ++ " " ++ repoFilePath)
-  liftIO $ callCommand ("tar xzvf " ++ repoFilePath ++ " -C "  ++ "/" ++ repoName)
+  let filePath    = fromJust $ repoPath repo
+  let rname       = fromJust $ repoName repo
+  let rpath       = "/" <> rname <> "/" <> rname <> ".tar.gz "
+  liftIO $ callCommand (unpack $ "mkdir " <> "/" <> rname)
+  liftIO $ callCommand (unpack $ "mv " <> filePath <> " " <> rpath)
+  liftIO $ callCommand (unpack $ "tar xzvf " <> rpath <> " -C "  <> "/" <> rname)
 
 
 runDocker ::(MonadMask m, MonadIO m) => DockerT m b -> m b
@@ -34,11 +34,11 @@ runDocker f = do
 buildContainer :: ReaderT Repo IO (Either DockerError ContainerID)
 buildContainer  = do
   repo <- ask
-  let  repoName    = fromJust $ name repo
-  let  imageName   = pack $ repoName ++  ":latest"
+  let  rname    = fromJust $ repoName repo
+  let  imageName = rname <> ":latest"
   runDocker $ do
-    buildImageFromDockerfile (defaultBuildOpts imageName) ("/" ++ repoName)
-    createContainer (defaultCreateOpts imageName) (Just $ pack repoName)
+    buildImageFromDockerfile (defaultBuildOpts imageName) ("/" <> unpack rname)
+    createContainer (defaultCreateOpts imageName) (repoName repo)
 
 
 runContainer :: ContainerID -> IO (Either DockerError ())

@@ -2,7 +2,7 @@
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 936a75484a32b9e3d3feac238f46e5b17cc21c46fefffe0ec361340380c569fc
+-- hash: 2ac44c32c85e83d19a2f767802562d4ecc6b3bfcd3122e3468df24dea7bb7a1a
 
 name:           deploy
 version:        0.1.12
@@ -27,15 +27,17 @@ source-repository head
 library
   hs-source-dirs:
       src
-  default-extensions: OverloadedStrings DataKinds TypeOperators NoImplicitPrelude DeriveGeneric RecordWildCards ExtendedDefaultRules FlexibleContexts FlexibleInstances MultiParamTypeClasses
-  ghc-options: -fno-warn-orphans -Wall -Wcompat -Wincomplete-record-updates -Wredundant-constraints
+  default-extensions: OverloadedStrings DataKinds ScopedTypeVariables TypeOperators NoImplicitPrelude DeriveGeneric RecordWildCards ExtendedDefaultRules FlexibleContexts FlexibleInstances MultiParamTypeClasses
+  ghc-options: -Wall -Wcompat -Wincomplete-record-updates -Wredundant-constraints -fno-warn-orphans
   build-depends:
       HaskellNet >=0.5.1
     , aeson
     , base >=4.7 && <5
     , bytestring
+    , dhall
     , directory
     , docker >=0.4.1.1
+    , ghc
     , http-client >=0.5.7.0
     , http-conduit
     , http-types
@@ -47,6 +49,7 @@ library
     , servant-server
     , text >=1.2.2.2
     , transformers >=0.5.2.0
+    , unix
     , wai
     , warp
   exposed-modules:
@@ -54,7 +57,6 @@ library
       Deploy.Types
       Deploy.Execute.Core
       Deploy.Initiate.Core
-      Deploy.Util
   other-modules:
       Deploy.Notification.Conf
       Deploy.Notification.Core
@@ -66,8 +68,8 @@ executable deploy-exe
   main-is: Main.hs
   hs-source-dirs:
       app
-  default-extensions: OverloadedStrings DataKinds TypeOperators NoImplicitPrelude DeriveGeneric RecordWildCards ExtendedDefaultRules FlexibleContexts FlexibleInstances MultiParamTypeClasses
-  ghc-options: -fno-warn-orphans -Wall -Wcompat -Wincomplete-record-updates -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
+  default-extensions: OverloadedStrings DataKinds ScopedTypeVariables TypeOperators NoImplicitPrelude DeriveGeneric RecordWildCards ExtendedDefaultRules FlexibleContexts FlexibleInstances MultiParamTypeClasses
+  ghc-options: -Wall -Wcompat -Wincomplete-record-updates -Wredundant-constraints -fno-warn-orphans -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       base
     , deploy
@@ -80,8 +82,8 @@ executable deploy-init
   main-is: Main.hs
   hs-source-dirs:
       cli
-  default-extensions: OverloadedStrings DataKinds TypeOperators NoImplicitPrelude DeriveGeneric RecordWildCards ExtendedDefaultRules FlexibleContexts FlexibleInstances MultiParamTypeClasses
-  ghc-options: -fno-warn-orphans -Wall -Wcompat -Wincomplete-record-updates -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
+  default-extensions: OverloadedStrings DataKinds ScopedTypeVariables TypeOperators NoImplicitPrelude DeriveGeneric RecordWildCards ExtendedDefaultRules FlexibleContexts FlexibleInstances MultiParamTypeClasses
+  ghc-options: -Wall -Wcompat -Wincomplete-record-updates -Wredundant-constraints -fno-warn-orphans -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       base
     , deploy
@@ -95,8 +97,8 @@ test-suite deploy-test
   main-is: Spec.hs
   hs-source-dirs:
       test
-  default-extensions: OverloadedStrings DataKinds TypeOperators NoImplicitPrelude DeriveGeneric RecordWildCards ExtendedDefaultRules FlexibleContexts FlexibleInstances MultiParamTypeClasses
-  ghc-options: -fno-warn-orphans -Wall -Wcompat -Wincomplete-record-updates -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
+  default-extensions: OverloadedStrings DataKinds ScopedTypeVariables TypeOperators NoImplicitPrelude DeriveGeneric RecordWildCards ExtendedDefaultRules FlexibleContexts FlexibleInstances MultiParamTypeClasses
+  ghc-options: -Wall -Wcompat -Wincomplete-record-updates -Wredundant-constraints -fno-warn-orphans -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       base
     , deploy
