@@ -14,9 +14,6 @@ ghc-options:
   - -Wincomplete-record-updates
   - -Wredundant-constraints
   - -fno-warn-orphans
-  - -optl-fuse-ld=lld
-
-ld-options: -fuse-ld=lld
 
 default-extensions: 
 - OverloadedStrings

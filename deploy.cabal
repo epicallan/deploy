@@ -2,7 +2,7 @@
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 1e6cc6c677f596cd83c471f9a37b9571b4106fef42c3c815b6936bcfed1622eb
+-- hash: f79ae8a18f7725f92cb8ef230cd2b9f16e5ad2688dfc7e61e9dbbcff6a9c6e9b
 
 name:           deploy
 version:        0.1.12
@@ -28,8 +28,7 @@ library
   hs-source-dirs:
       src
   default-extensions: OverloadedStrings DataKinds ScopedTypeVariables TypeOperators NoImplicitPrelude DeriveGeneric RecordWildCards ExtendedDefaultRules FlexibleContexts FlexibleInstances MultiParamTypeClasses
-  ghc-options: -Wall -Wcompat -Wincomplete-record-updates -Wredundant-constraints -fno-warn-orphans -optl-fuse-ld=lld
-  ld-options: -fuse-ld=lld
+  ghc-options: -Wall -Wcompat -Wincomplete-record-updates -Wredundant-constraints -fno-warn-orphans
   build-depends:
       HaskellNet >=0.5.1
     , aeson
@@ -48,6 +47,7 @@ library
     , safe-exceptions
     , servant-multipart >=0.11
     , servant-server
+    , temporary
     , text >=1.2.2.2
     , transformers >=0.5.2.0
     , unix
@@ -70,8 +70,7 @@ executable deploy-exe
   hs-source-dirs:
       app
   default-extensions: OverloadedStrings DataKinds ScopedTypeVariables TypeOperators NoImplicitPrelude DeriveGeneric RecordWildCards ExtendedDefaultRules FlexibleContexts FlexibleInstances MultiParamTypeClasses
-  ghc-options: -Wall -Wcompat -Wincomplete-record-updates -Wredundant-constraints -fno-warn-orphans -optl-fuse-ld=lld -threaded -rtsopts -with-rtsopts=-N
-  ld-options: -fuse-ld=lld
+  ghc-options: -Wall -Wcompat -Wincomplete-record-updates -Wredundant-constraints -fno-warn-orphans -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       base
     , deploy
@@ -85,8 +84,7 @@ executable deploy-init
   hs-source-dirs:
       cli
   default-extensions: OverloadedStrings DataKinds ScopedTypeVariables TypeOperators NoImplicitPrelude DeriveGeneric RecordWildCards ExtendedDefaultRules FlexibleContexts FlexibleInstances MultiParamTypeClasses
-  ghc-options: -Wall -Wcompat -Wincomplete-record-updates -Wredundant-constraints -fno-warn-orphans -optl-fuse-ld=lld -threaded -rtsopts -with-rtsopts=-N
-  ld-options: -fuse-ld=lld
+  ghc-options: -Wall -Wcompat -Wincomplete-record-updates -Wredundant-constraints -fno-warn-orphans -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       base
     , deploy
@@ -101,8 +99,7 @@ test-suite deploy-test
   hs-source-dirs:
       test
   default-extensions: OverloadedStrings DataKinds ScopedTypeVariables TypeOperators NoImplicitPrelude DeriveGeneric RecordWildCards ExtendedDefaultRules FlexibleContexts FlexibleInstances MultiParamTypeClasses
-  ghc-options: -Wall -Wcompat -Wincomplete-record-updates -Wredundant-constraints -fno-warn-orphans -optl-fuse-ld=lld -threaded -rtsopts -with-rtsopts=-N
-  ld-options: -fuse-ld=lld
+  ghc-options: -Wall -Wcompat -Wincomplete-record-updates -Wredundant-constraints -fno-warn-orphans -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       base
     , deploy

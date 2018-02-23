@@ -17,7 +17,7 @@ import           System.Process         (callCommand)
 unarchiveFile :: ReaderT Repo IO ()
 unarchiveFile = do
   repo <- ask
-  let filePath    = fromJust $ repoPath repo
+  let filePath    = fromJust $ uploadPath repo
   let rname       = fromJust $ repoName repo
   let rpath       = "/" <> rname <> "/" <> rname <> ".tar.gz "
   liftIO $ callCommand (unpack $ "mkdir " <> "/" <> rname)
@@ -37,8 +37,11 @@ buildContainer  = do
   let  rname    = fromJust $ repoName repo
   let  imageName = rname <> ":latest"
   runDocker $ do
-    buildImageFromDockerfile (defaultBuildOpts imageName) ("/" <> unpack rname)
-    createContainer (defaultCreateOpts imageName) (repoName repo)
+    eResult <- buildImageFromDockerfile (defaultBuildOpts imageName) ("/" <> unpack rname)
+    case eResult of
+      Left err -> pure $  Left err
+      Right _  ->  createContainer (defaultCreateOpts imageName) (repoName repo)
+
 
 
 runContainer :: ContainerID -> IO (Either DockerError ())

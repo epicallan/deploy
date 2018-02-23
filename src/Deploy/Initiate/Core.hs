@@ -15,7 +15,7 @@ import           Network.HTTP.Client.MultipartFormData (formDataBody, partBS,
                                                         partFileSource)
 import           Protolude                             hiding (Text)
 import           System.Directory                      (getCurrentDirectory)
-import           System.IO.Temp
+import           System.IO.Temp                        (createTempDirectory, getCanonicalTemporaryDirectory)
 import           System.Posix.Files                    (fileExist)
 import           System.Process                        (callCommand)
 import           Util                                  as U (split)
@@ -25,8 +25,9 @@ import           Util                                  as U (split)
 -- | get repo name from current directory's name or from config name
 
 data IniateError =
-    NoRepoPathError
-  | MissingConfigError
+    MissingConfigError
+  | NoRepoName
+  | MissingDeloyIPError
   | RepoDetailsConfigError deriving (Show)
 
 instance Exception  IniateError
@@ -46,7 +47,7 @@ getRepoDetails = do
     Nothing   -> liftIO $ throwIO  MissingConfigError
     Just conf -> pure $ Repo
               <$> Just (repoName conf <|> dirName path)
-              <*> Just (repoPath conf <|> Just (pack path))
+              <*> Nothing
               <*> Just (repoFiles conf)
               <*> Just (deployIP conf)
   where
@@ -55,47 +56,51 @@ getRepoDetails = do
 
 
 -- | zip files in file list or default to zipping files under git
--- | TODO: for git based uploads, only upload what has chanhed
+-- | TODO: for git based uploads, only upload what has changed
 -- | perf consideration turn upload into a binary and upload chunks
-archiveFiles :: ReaderT Repo IO ()
+archiveFiles :: ReaderT Repo IO String
 archiveFiles = do
   repo <- ask
-  case repoPath repo of
-    Nothing       -> liftIO $ throwIO NoRepoPathError
-    Just filePath ->
+  case repoName repo of
+    Nothing       -> liftIO $ throwIO NoRepoName
+    Just name ->
       case repoFiles repo of
-        Just files -> liftIO $ zipFiles files
-        Nothing    -> liftIO $ gitArchive $ unpack filePath
+        Just files -> liftIO $ gzipFiles (unpack name) files
+        Nothing    -> liftIO $ gitArchiveFiles (unpack name)
 
   where
-    createRepoTmpDir repoName =
-      getCanonicalTemporaryDirectory >>= (\sysTmpDir -> createTempDirectory sysTempDir repoName)
-    gitArchiveFiles = do
+    createRepoTmpDir :: String -> IO String
+    createRepoTmpDir name =
+      getCanonicalTemporaryDirectory >>= (`createTempDirectory` name)
+    gitArchiveFiles :: String -> IO String
+    gitArchiveFiles name = do
       let archiveCmd tempPath = "git archive --format=tar.gz --output " <> tempPath <> ".tar.gz master"
-      repoTmpDir <- createRepoTmpDirpoName
+      repoTmpDir <- createRepoTmpDir name
       callCommand $ archiveCmd repoTmpDir
-    gzipFiles :: Text -> [Text] -> IO ()
-    gzipFiles repoName files = do
-        repoTmpDir <- createRepoTmpDirpoName
+      pure $ repoTmpDir <> ".tar.gz master"
+    gzipFiles :: String -> [Text] -> IO String
+    gzipFiles name files = do
+        repoTmpDir <- createRepoTmpDir name
         mapM_ (\x -> callCommand $ "cp -a -R " <> unpack x <> " " <> repoTmpDir) files
-        callCommand "tar -zcvf " <> repoName ".tar.gz" <> repoTmpDir
+        callCommand $ "tar -zcvf " <> name <> ".tar.gz" <> repoTmpDir
+        pure $ repoTmpDir ++ ".tar.gz master"
 
 -- TODO: add progress bar
-uploadFile :: ReaderT Repo IO ()
-uploadFile = do
+uploadFile :: String -> ReaderT Repo IO ()
+uploadFile archivePath = do
   repo <- ask
   manager <- liftIO $ newManager defaultManagerSettings
-  req <- parseRequest "http://88.80.186.143:8888/upload" -- TODO: should be an option
-  resp <- lift $ formDataBody (form repo) req >>=  flip httpLbs manager
-  liftIO $ print resp
+  case deployIP repo of
+    Nothing -> throwIO MissingDeloyIPError
+    Just address -> do
+      req <- parseRequest $ unpack address ++ "/upload"
+      resp <- lift $ formDataBody (form repo) req >>=  flip httpLbs manager
+      liftIO $ print resp
   where
-    form repo = [ partBS "name" (name repo), partFileSource "file" (archivePath repo)]
+    form repo = [ partBS "name" (name repo), partFileSource "file" archivePath]
 
     name :: Repo -> BS.ByteString
     name repo = encodeUtf8 $ fromJust (repoName repo)
-
-    archivePath :: Repo -> String
-    archivePath repo = unpack $ fromJust (repoPath repo) <> ".tar.gz"
 
 -- cleanup ::  ReaderT Repo IO ()
 
@@ -105,6 +110,6 @@ runDeploy = do
   case repoM of
     Nothing   ->  throwIO RepoDetailsConfigError
     Just repo -> do
-      runReaderT archiveFiles repo
-      runReaderT uploadFile repo
+      archivePath <- runReaderT archiveFiles repo
+      runReaderT (uploadFile archivePath) repo
       print ("uploaded file success" :: Text)

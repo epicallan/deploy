@@ -30,7 +30,7 @@ api = Proxy
 -- TODO: handle async exceptions better
 instance FromMultipart Tmp Repo where
   fromMultipart form =
-    Just $ Repo (repoName' form) (filePath form) Nothing
+    Just $ Repo (repoName' form) (filePath form) Nothing Nothing
       where
         repoName' = lookupInput "name"
 

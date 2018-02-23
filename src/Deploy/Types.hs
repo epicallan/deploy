@@ -26,10 +26,10 @@ instance ToJSON Status
 
 data Repo =
      Repo {
-        repoName  :: Maybe Text
-    ,   repoPath  :: Maybe Text
-    ,   repoFiles :: Maybe [Text]
-    ,   deployIP  :: Text
+        repoName   :: Maybe Text
+    ,   uploadPath :: Maybe Text
+    ,   repoFiles  :: Maybe [Text]
+    ,   deployIP   :: Maybe Text
     } deriving (Generic, Show)
 
 instance FromJSON Repo
