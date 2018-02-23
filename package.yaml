@@ -62,6 +62,7 @@ library:
   - ghc
   - dhall
   - unix
+  - temporary
 executables:
   deploy-init:
     main: Main.hs

@@ -15,6 +15,7 @@ import           Network.HTTP.Client.MultipartFormData (formDataBody, partBS,
                                                         partFileSource)
 import           Protolude                             hiding (Text)
 import           System.Directory                      (getCurrentDirectory)
+import           System.IO.Temp
 import           System.Posix.Files                    (fileExist)
 import           System.Process                        (callCommand)
 import           Util                                  as U (split)
@@ -55,7 +56,7 @@ getRepoDetails = do
 
 -- | zip files in file list or default to zipping files under git
 -- | TODO: for git based uploads, only upload what has chanhed
--- | perf turn upload into a binary and upload chunks
+-- | perf consideration turn upload into a binary and upload chunks
 archiveFiles :: ReaderT Repo IO ()
 archiveFiles = do
   repo <- ask
@@ -67,17 +68,17 @@ archiveFiles = do
         Nothing    -> liftIO $ gitArchive $ unpack filePath
 
   where
-    -- TODO:  use a temp folder
-    gitArchive filePath =
-      let archiveCmd = "git archive --format=tar.gz --output " <> filePath <> ".tar.gz master"
-      in  callCommand archiveCmd
-    zipFiles :: [Text] -> IO ()
-    zipFiles files =
-      let newTempDirCmd   = callCommand "mkdir .temp" -- TODO:
-          copyIntoTempCmd = mapM_ (\x -> callCommand $ unpack $ x <> "cp") files -- TODO:
-      in  newTempDirCmd  >> copyIntoTempCmd  >> callCommand "zip" -- TODO:
-
-
+    createRepoTmpDir repoName =
+      getCanonicalTemporaryDirectory >>= (\sysTmpDir -> createTempDirectory sysTempDir repoName)
+    gitArchiveFiles = do
+      let archiveCmd tempPath = "git archive --format=tar.gz --output " <> tempPath <> ".tar.gz master"
+      repoTmpDir <- createRepoTmpDirpoName
+      callCommand $ archiveCmd repoTmpDir
+    gzipFiles :: Text -> [Text] -> IO ()
+    gzipFiles repoName files = do
+        repoTmpDir <- createRepoTmpDirpoName
+        mapM_ (\x -> callCommand $ "cp -a -R " <> unpack x <> " " <> repoTmpDir) files
+        callCommand "tar -zcvf " <> repoName ".tar.gz" <> repoTmpDir
 
 -- TODO: add progress bar
 uploadFile :: ReaderT Repo IO ()
