@@ -23,7 +23,10 @@ import           Util                                  as U (split)
 -- | Gets repo's path
 -- | get repo name from current directory's name or from config name
 
-data IniateError = NoRepoPathError | NoRepoDetailsError deriving (Show)
+data IniateError =
+    NoRepoPathError
+  | MissingConfigError
+  | RepoDetailsConfigError deriving (Show)
 
 instance Exception  IniateError
 
@@ -39,12 +42,12 @@ getRepoDetails = do
   path     <- liftIO getCurrentDirectory
   confM    <- getConfig path
   case confM of
-    Nothing   -> pure $  Repo
-              <$> Just (dirName path) <*> Just (Just $ pack path) <*> Nothing
+    Nothing   -> liftIO $ throwIO  MissingConfigError
     Just conf -> pure $ Repo
               <$> Just (repoName conf <|> dirName path)
               <*> Just (repoPath conf <|> Just (pack path))
               <*> Just (repoFiles conf)
+              <*> Just (deployIP conf)
   where
     dirName :: String -> Maybe Text
     dirName   = lastMay . fmap pack . U.split '/'
@@ -52,6 +55,7 @@ getRepoDetails = do
 
 -- | zip files in file list or default to zipping files under git
 -- | TODO: for git based uploads, only upload what has chanhed
+-- | perf turn upload into a binary and upload chunks
 archiveFiles :: ReaderT Repo IO ()
 archiveFiles = do
   repo <- ask
@@ -80,7 +84,7 @@ uploadFile :: ReaderT Repo IO ()
 uploadFile = do
   repo <- ask
   manager <- liftIO $ newManager defaultManagerSettings
-  req <- parseRequest "http://88.80.186.143:8888/upload"
+  req <- parseRequest "http://88.80.186.143:8888/upload" -- TODO: should be an option
   resp <- lift $ formDataBody (form repo) req >>=  flip httpLbs manager
   liftIO $ print resp
   where
@@ -98,7 +102,7 @@ runDeploy :: IO ()
 runDeploy = do
   repoM <- getRepoDetails
   case repoM of
-    Nothing ->  throwIO NoRepoDetailsError
+    Nothing   ->  throwIO RepoDetailsConfigError
     Just repo -> do
       runReaderT archiveFiles repo
       runReaderT uploadFile repo

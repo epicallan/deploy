@@ -29,6 +29,7 @@ data Repo =
         repoName  :: Maybe Text
     ,   repoPath  :: Maybe Text
     ,   repoFiles :: Maybe [Text]
+    ,   deployIP  :: Text
     } deriving (Generic, Show)
 
 instance FromJSON Repo
