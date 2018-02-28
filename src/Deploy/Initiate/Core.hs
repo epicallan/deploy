@@ -94,6 +94,8 @@ uploadFile archivePath = do
     Nothing -> throwIO MissingDeloyIPError
     Just address -> do
       req <- parseRequest $ unpack address ++ "/upload"
+      --  Request -> Manager -> (Response BodyReader -> IO a) -> IO a
+      -- withResponce (formDataBody (form repo))
       resp <- lift $ formDataBody (form repo) req >>=  flip httpLbs manager
       liftIO $ print resp
   where
