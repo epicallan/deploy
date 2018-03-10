@@ -2,7 +2,7 @@
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: f79ae8a18f7725f92cb8ef230cd2b9f16e5ad2688dfc7e61e9dbbcff6a9c6e9b
+-- hash: 2d592edd464d6d8a1ee7d676eaf97491a3214d327a8ae376d337c014029bd5aa
 
 name:           deploy
 version:        0.1.12
@@ -45,13 +45,12 @@ library
     , process >=1.4.3.0
     , protolude >=0.2
     , safe-exceptions
-    , servant-multipart >=0.11
-    , servant-server
+    , scotty
     , temporary
     , text >=1.2.2.2
-    , transformers >=0.5.2.0
     , unix
     , wai
+    , wai-extra
     , warp
   exposed-modules:
       Deploy.API

@@ -1,60 +1,46 @@
-module Deploy.API  (
-  startApp
- ) where
+module Deploy.API (startApp) where
 
-import           Control.Monad.IO.Class
-import           Control.Monad.Trans.Reader
-import           Data.Text                  (pack)
-import           Deploy.Execute.Core        (buildContainer, runContainer,
-                                             unarchiveFile)
-import           Deploy.Types               (Repo (..))
-import           Network.Wai.Handler.Warp
-import Data.String (String)
-import           Protolude
-import           Servant
-import           Servant.Multipart          (FromMultipart, MultipartForm, Tmp,
-                                             fdPayload, fromMultipart, 
-                                             lookupFile, lookupInput)
+import           Protolude                            hiding (decodeUtf8, get)
 
 
+import           Network.Wai.Middleware.RequestLogger (logStdoutDev)
+import           Network.Wai.Parse                    (FileInfo (..))
+import           Web.Scotty
 
-type API = "upload" :> MultipartForm Tmp Repo :> Post '[JSON] String
-      :<|> "home" :> Get '[JSON] String
+import           Deploy.Execute.Core                  (buildContainer,
+                                                       runContainer,
+                                                       unarchiveFile)
+import           Deploy.Types                         (Repo (..))
+
+import qualified Data.ByteString.Char8                as BS
+import qualified Data.ByteString.Lazy                 as B
+import           Data.Text                            (pack)
 
 
-api :: Proxy API
-api = Proxy
-
--- TODO: Increase timeout
--- TODO: upload only changed files
--- TODO: handle async exceptions better
-instance FromMultipart Tmp Repo where
-  fromMultipart form =
-    Just $ Repo (repoName' form) (filePath form) Nothing Nothing
-      where
-        repoName' = lookupInput "name"
-
-        filePath = (pack . fdPayload <$>) .lookupFile "file"
-
-uploadHandler :: Repo -> Handler String
-uploadHandler repo = do
-    liftIO $ print repo
-    liftIO $ runReaderT unarchiveFile repo
-    ebuildResults <- liftIO $ runReaderT buildContainer repo
-    case ebuildResults of
-      Left err  -> return $ show err
-      Right id' -> do
-        erunResult <- liftIO $ runContainer id'
-        case erunResult of
-          Left err -> return $ show err
-          Right _  -> return "started container"
-
-home :: Handler String
-home = return "Deploy API is live"
-
-routes :: Server API
-routes =
-  uploadHandler :<|> home
 
 startApp :: IO ()
-startApp = run 8888 (serve api routes)
+startApp = scotty 8888 $ do
+    -- Add any WAI middleware, they are run top-down.
+    middleware logStdoutDev
+
+    get "/" $ text "deploy server is live"
+
+    get "/upload" $ do
+        fs <- files
+        let fs' = [ (BS.unpack (fileName fi), fileContent fi) | (_, fi) <- fs ]
+        case headMay fs' of
+            Nothing        -> pure ()
+            Just (_fileName, _fileContent) -> do
+                let filePath = "uploads" <> "/" <> _fileName
+                let repo = Repo (Just $ pack _fileName) (Just $ pack filePath) Nothing Nothing
+                liftIO $ B.writeFile filePath _fileContent
+                text $ show repo
+                -- liftIO $ runReaderT unarchiveFile repo
+                -- ebuildResults <- liftIO $ runReaderT buildContainer repo
+                -- case ebuildResults of
+                --     Left err  ->  text $ show err
+                --     Right id' -> do
+                --         erunResult <- liftIO $ runContainer id'
+                --         case erunResult of
+                --             Left err ->  text $ show err
+                --             Right _  ->  text "started container"

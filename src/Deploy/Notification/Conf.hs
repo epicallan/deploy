@@ -1,4 +1,5 @@
 module Deploy.Notification.Conf (conf) where
+
 import           Deploy.Notification.Types (EmailConf (..))
 
 conf :: EmailConf

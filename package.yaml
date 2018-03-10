@@ -47,19 +47,18 @@ library:
   - bytestring
   - docker >=0.4.1.1
   - directory
-  - servant-multipart >=0.11
   - http-client >=0.5.7.0
   - process >=1.4.3.0
-  - transformers >=0.5.2.0
   - network >=2.6.3.2
   - HaskellNet >=0.5.1
-  - servant-server
   - wai
   - warp
   - ghc
   - dhall
   - unix
   - temporary
+  - scotty
+  - wai-extra  
 executables:
   deploy-init:
     main: Main.hs
