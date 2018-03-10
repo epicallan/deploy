@@ -34,13 +34,13 @@ startApp = scotty 8888 $ do
                 let filePath = "uploads" <> "/" <> _fileName
                 let repo = Repo (Just $ pack _fileName) (Just $ pack filePath) Nothing Nothing
                 liftIO $ B.writeFile filePath _fileContent
-                text $ show repo
-                -- liftIO $ runReaderT unarchiveFile repo
-                -- ebuildResults <- liftIO $ runReaderT buildContainer repo
-                -- case ebuildResults of
-                --     Left err  ->  text $ show err
-                --     Right id' -> do
-                --         erunResult <- liftIO $ runContainer id'
-                --         case erunResult of
-                --             Left err ->  text $ show err
-                --             Right _  ->  text "started container"
+                -- text $ show repo
+                liftIO $ runReaderT unarchiveFile repo
+                ebuildResults <- liftIO $ runReaderT buildContainer repo
+                case ebuildResults of
+                    Left err  ->  text $ show err
+                    Right id' -> do
+                        erunResult <- liftIO $ runContainer id'
+                        case erunResult of
+                            Left err ->  text $ show err
+                            Right _  ->  text "started container"
