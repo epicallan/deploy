@@ -1,24 +1,23 @@
 module Deploy.Initiate.Core (runDeploy) where
 
-import qualified Data.ByteString.Char8                 as BS hiding (getLine,
-                                                              putStrLn)
-import           Data.Maybe
-import           Data.String                           (String)
+import           Protolude                    hiding (Text)
+
+import           Data.String                  (String)
 import           Data.Text
-import qualified Data.Text.Lazy                        as TL
-import           Deploy.Types                          (Repo (..))
-import           Dhall                                 hiding (Text)
-import           Network.HTTP.Client                   (defaultManagerSettings,
-                                                        httpLbs, newManager,
-                                                        parseRequest)
-import           Network.HTTP.Client.MultipartFormData (formDataBody, partBS,
-                                                        partFileSource)
-import           Protolude                             hiding (Text)
-import           System.Directory                      (getCurrentDirectory)
-import           System.IO.Temp                        (createTempDirectory, getCanonicalTemporaryDirectory)
-import           System.Posix.Files                    (fileExist)
-import           System.Process                        (callCommand)
-import           Util                                  as U (split)
+import qualified Data.Text.Lazy               as TL
+import           Deploy.Types                 (Repo (..))
+import           Dhall                        hiding (Text)
+import           Network.HTTP.Client          (Request (..),
+                                               defaultManagerSettings, httpLbs,
+                                               newManager, parseRequest)
+import           Network.HTTP.Client.Internal (StreamFileStatus (..),
+                                               observedStreamFile)
+import           System.Directory             (getCurrentDirectory)
+import           System.IO.Temp               (createTempDirectory,
+                                               getCanonicalTemporaryDirectory)
+import           System.Posix.Files           (fileExist)
+import           System.Process               (callCommand)
+import           Util                         as U (split)
 
 -- | read in config file if exists
 -- | Gets repo's path
@@ -34,9 +33,10 @@ instance Exception  IniateError
 
 getConfig :: String -> IO (Maybe Repo)
 getConfig repoPath = do
-  hasConfigFile <- liftIO $ fileExist (repoPath ++ "/deploy-conf.dhall")
+  let configPath = repoPath ++ "/deploy.dhall"
+  hasConfigFile <- liftIO $ fileExist configPath
   if hasConfigFile then
-    input auto (TL.pack $ repoPath ++ "/deploy-conf") >>= pure . Just
+    input auto (TL.pack configPath) >>= pure . Just
     else pure Nothing
 
 getRepoDetails :: IO (Maybe Repo)
@@ -47,7 +47,7 @@ getRepoDetails = do
     Nothing   -> liftIO $ throwIO  MissingConfigError
     Just conf -> pure $ Repo
               <$> Just (repoName conf <|> dirName path)
-              <*> Nothing
+              <*> Just mempty
               <*> Just (repoFiles conf)
               <*> Just (deployIP conf)
   where
@@ -77,13 +77,13 @@ archiveFiles = do
       let archiveCmd tempPath = "git archive --format=tar.gz --output " <> tempPath <> ".tar.gz master"
       repoTmpDir <- createRepoTmpDir name
       callCommand $ archiveCmd repoTmpDir
-      pure $ repoTmpDir <> ".tar.gz master"
+      pure $ repoTmpDir <> ".tar.gz"
     gzipFiles :: String -> [Text] -> IO String
     gzipFiles name files = do
         repoTmpDir <- createRepoTmpDir name
         mapM_ (\x -> callCommand $ "cp -a -R " <> unpack x <> " " <> repoTmpDir) files
         callCommand $ "tar -zcvf " <> name <> ".tar.gz" <> repoTmpDir
-        pure $ repoTmpDir ++ ".tar.gz master"
+        pure $ repoTmpDir ++ ".tar.gz"
 
 -- TODO: add progress bar
 uploadFile :: String -> ReaderT Repo IO ()
@@ -93,16 +93,15 @@ uploadFile archivePath = do
   case deployIP repo of
     Nothing -> throwIO MissingDeloyIPError
     Just address -> do
-      req <- parseRequest $ unpack address ++ "/upload"
-      --  Request -> Manager -> (Response BodyReader -> IO a) -> IO a
-      -- withResponce (formDataBody (form repo))
-      resp <- lift $ formDataBody (form repo) req >>=  flip httpLbs manager
+      initReq <- parseRequest $ unpack address ++ "/upload"
+      body    <- liftIO $ observedStreamFile streamingStatus archivePath
+      let req = initReq {requestBody = body, method = "POST"}
+      resp <- liftIO (httpLbs req manager)
       liftIO $ print resp
   where
-    form repo = [ partBS "name" (name repo), partFileSource "file" archivePath]
-
-    name :: Repo -> BS.ByteString
-    name repo = encodeUtf8 $ fromJust (repoName repo)
+    streamingStatus :: StreamFileStatus -> IO ()
+    streamingStatus status =
+      print $  "\n read so far: " <> (show (readSoFar status) :: Text)
 
 -- cleanup ::  ReaderT Repo IO ()
 

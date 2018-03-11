@@ -36,29 +36,29 @@ library:
   - Deploy.Execute.Core
   - Deploy.Initiate.Core
   dependencies:
-  - base >=4.7 && <5
-  - protolude >= 0.2
-  - text >=1.2.2.2
-  - bytestring >=0.10.8.1
   - aeson
+  - base
+  - blaze-builder
+  - bytestring
+  - dhall
+  - directory
+  - docker
+  - ghc
+  - HaskellNet 
+  - http-client
   - http-conduit
   - http-types
+  - network
+  - process
+  - protolude
   - safe-exceptions
-  - bytestring
-  - docker >=0.4.1.1
-  - directory
-  - http-client >=0.5.7.0
-  - process >=1.4.3.0
-  - network >=2.6.3.2
-  - HaskellNet >=0.5.1
-  - wai
-  - warp
-  - ghc
-  - dhall
-  - unix
-  - temporary
   - scotty
-  - wai-extra  
+  - temporary
+  - text 
+  - unix
+  - wai
+  - wai-extra
+  - warp
 executables:
   deploy-init:
     main: Main.hs
@@ -69,8 +69,8 @@ executables:
     - -with-rtsopts=-N
     dependencies:
       - base
-      - protolude >= 0.2
       - deploy
+      - protolude
   deploy-exe:
     main: Main.hs
     source-dirs: app
@@ -80,8 +80,8 @@ executables:
     - -with-rtsopts=-N
     dependencies:
     - base
-    - protolude >= 0.2
     - deploy
+    - protolude
 tests:
   deploy-test:
     main: Spec.hs

@@ -2,7 +2,7 @@
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 2d592edd464d6d8a1ee7d676eaf97491a3214d327a8ae376d337c014029bd5aa
+-- hash: 522300e9709e17cff536fafc0303734388d5cb9f3ff813b5c4f7d7812a757929
 
 name:           deploy
 version:        0.1.12
@@ -30,24 +30,25 @@ library
   default-extensions: OverloadedStrings DataKinds ScopedTypeVariables TypeOperators NoImplicitPrelude DeriveGeneric RecordWildCards ExtendedDefaultRules FlexibleContexts FlexibleInstances MultiParamTypeClasses
   ghc-options: -Wall -Wcompat -Wincomplete-record-updates -Wredundant-constraints -fno-warn-orphans
   build-depends:
-      HaskellNet >=0.5.1
+      HaskellNet
     , aeson
-    , base >=4.7 && <5
+    , base
+    , blaze-builder
     , bytestring
     , dhall
     , directory
-    , docker >=0.4.1.1
+    , docker
     , ghc
-    , http-client >=0.5.7.0
+    , http-client
     , http-conduit
     , http-types
-    , network >=2.6.3.2
-    , process >=1.4.3.0
-    , protolude >=0.2
+    , network
+    , process
+    , protolude
     , safe-exceptions
     , scotty
     , temporary
-    , text >=1.2.2.2
+    , text
     , unix
     , wai
     , wai-extra
@@ -73,7 +74,7 @@ executable deploy-exe
   build-depends:
       base
     , deploy
-    , protolude >=0.2
+    , protolude
   other-modules:
       Paths_deploy
   default-language: Haskell2010
@@ -87,7 +88,7 @@ executable deploy-init
   build-depends:
       base
     , deploy
-    , protolude >=0.2
+    , protolude
   other-modules:
       Paths_deploy
   default-language: Haskell2010
