@@ -1,4 +1,5 @@
-module Deploy.Execute.Core (
+-- | Executes dockerfile or docker-compose script in upload
+module Deploy.Execute (
     buildContainer
   , runContainer
   , unarchiveFile) where

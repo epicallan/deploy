@@ -1,5 +1,5 @@
 module Main where
-import           Deploy.Initiate.Core (runDeploy)
+import           Deploy.Initiate (runDeploy)
 import           Protolude
 
 main :: IO ()
