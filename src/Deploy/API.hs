@@ -21,14 +21,6 @@ import           GHC.IO.Handle                        (BufferMode (BlockBufferin
                                                        hSetBuffering)
 
 
--- buildFile :: IO BS.ByteString -> B.Builder
--- buildFile reader = do
---     chuck <- reader
---     let len = BS.length chuck
---     let builder =  B.insertByteString chunk
---     if len > 0
---         then
-
 startApp :: IO ()
 startApp = scotty 8888 $ do
     -- Add any WAI middleware, they are run top-down.
