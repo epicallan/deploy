@@ -10,7 +10,6 @@ import           Control.Exception.Safe (MonadMask)
 import           Data.Text              (unpack)
 import           Deploy.Types           (DeployError (..), Repo (..))
 import           Docker.Client          hiding (name, path)
--- import           System.Directory           (getHomeDirectory)
 import           System.Process         (callCommand)
 
 
@@ -29,7 +28,7 @@ runDocker f = do
   runDockerT (defaultClientOpts, h) f
 
 -- | builds docker container from dockerfile, we publish all exposed ports in dockerfile on host
--- TODO: we could probably provide an option in the config file for listing the ports to publsih
+-- TODO: we could probably provide an option in the config file for listing the ports to publish
 buildContainer :: ReaderT Repo IO (Either DockerError ContainerID)
 buildContainer  = do
   repo <- ask
