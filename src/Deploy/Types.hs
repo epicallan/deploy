@@ -1,8 +1,9 @@
 
 module Deploy.Types
     (
-        Status (..)
-    ,   Repo (..)
+      Status (..)
+    , Repo (..)
+    , DeployError (..)
     ) where
 
 import           Data.Aeson   (FromJSON, ToJSON)
@@ -35,3 +36,12 @@ data Repo =
 instance FromJSON Repo
 instance ToJSON Repo
 instance Interpret Repo
+
+data DeployError =
+    MissingConfigError
+  | NoRepoName
+  | MissingDeloyIPError
+  | MissingUploadPath
+  | RepoDetailsConfigError deriving (Show)
+
+instance Exception  DeployError

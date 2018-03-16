@@ -1,25 +1,26 @@
+{-# LANGUAGE ScopedTypeVariables #-}
+
 module Deploy.API (startApp) where
 
 import           Protolude                            hiding (decodeUtf8, get)
 
-
-import           Network.Wai.Middleware.RequestLogger (logStdoutDev)
-import           Web.Scotty
-
--- import           Deploy.Execute.Core                  (buildContainer,
---                                                        runContainer,
---                                                        unarchiveFile)
--- import           Deploy.Types                         (Repo (..))
-
-import qualified Blaze.ByteString.Builder             as B
-import qualified Data.ByteString                      as BS
 import           Data.ByteString.Builder              (hPutBuilder)
-import qualified Data.ByteString.Lazy                 as BSL
--- import           Data.Text                            (pack)
+
 import           GHC.IO.Handle                        (BufferMode (BlockBuffering),
                                                        hSetBinaryMode,
                                                        hSetBuffering)
+import           Network.Wai.Middleware.RequestLogger (logStdoutDev)
+import           Web.Scotty
 
+import           Deploy.Execute                       (buildContainer,
+                                                       runContainer,
+                                                       unarchiveFile)
+import           Deploy.Types                         (Repo (..))
+
+import qualified Blaze.ByteString.Builder             as B
+import qualified Data.ByteString                      as BS
+import qualified Data.Text                            as T
+import qualified Data.Text.Lazy                       as L
 
 startApp :: IO ()
 startApp = scotty 8888 $ do
@@ -28,9 +29,13 @@ startApp = scotty 8888 $ do
 
     get "/" $ text "deploy server is live"
 
-    post "/upload" $ do
-        rd      <- bodyReader
-        let buildFile acc = do -- accumulates a builder
+    post "/upload/:name" $ do
+        (name :: Text) <- param "name"
+        rd             <- bodyReader
+        let uploadArchivePath = "uploads/" <> name <> ".tar.gz"
+        let writeHandle       =  openFile (T.unpack uploadArchivePath) WriteMode
+        let repo              = Repo (Just name) (Just uploadArchivePath) Nothing Nothing
+        let buildFile acc     = do -- accumulates a builder
                     chunk <- rd
                     let len      = BS.length chunk
                     let newBuilderChunk = acc <> B.insertByteString chunk
@@ -38,33 +43,17 @@ startApp = scotty 8888 $ do
                         then buildFile newBuilderChunk
                         else return acc
         builder <- liftIO $ buildFile mempty
-        _ <-  return B.flush
+        _       <-  return B.flush
         wHandle <- liftIO writeHandle
-        liftIO  $ hSetBinaryMode wHandle True
-        liftIO  $ hSetBuffering wHandle (BlockBuffering Nothing)
-        liftIO  $ hPutBuilder wHandle builder
-        text $ "added new upload of size: " <> show (BSL.length $ B.toLazyByteString builder)
-        where
-          writeHandle :: IO Handle
-          writeHandle =  openFile "uploads/test.tar.gz" WriteMode
-            -- let handle =
-            -- in   handle >>= flip hSetBinaryMode True
-            -- >>=>>= flip hSetBuffering (BlockBuffering Nothing)
-
-    --     let fs' = [ (BS.unpack (fileName fi), fileContent fi) | (_, fi) <- fs ]
-    --     case headMay fs' of
-    --         Nothing        -> pure ()
-    --         Just (_fileName, _fileContent) -> do
-    --             let filePath = "uploads" <> "/" <> _fileName
-    --             let repo = Repo (Just $ pack _fileName) (Just $ pack filePath) Nothing Nothing
-    --             liftIO $ B.writeFile filePath _fileContent
-    --             -- text $ show repo
-    --             liftIO $ runReaderT unarchiveFile repo
-    --             ebuildResults <- liftIO $ runReaderT buildContainer repo
-    --             case ebuildResults of
-    --                 Left err  ->  text $ show err
-    --                 Right id' -> do
-    --                     erunResult <- liftIO $ runContainer id'
-    --                     case erunResult of
-    --                         Left err ->  text $ show err
-    --                         Right _  ->  text "started container"
+        liftIO $ hSetBinaryMode wHandle True
+        liftIO $ hSetBuffering wHandle (BlockBuffering Nothing)
+        liftIO $ hPutBuilder wHandle builder
+        liftIO $ runReaderT unarchiveFile repo
+        ebuildResults <- liftIO $ runReaderT buildContainer repo
+        case ebuildResults of
+            Left err  ->  text $ show err
+            Right containerId -> do
+                erunResult <- liftIO $ runContainer containerId
+                case erunResult of
+                    Left err ->  text $ show err
+                    Right _  ->  text $ "started container for: " <> L.fromStrict name

@@ -2,7 +2,7 @@
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 522300e9709e17cff536fafc0303734388d5cb9f3ff813b5c4f7d7812a757929
+-- hash: daa8e66c2638213fd7d1d62f57db2961e0cc7549db625c22f002e4ffd803f7f8
 
 name:           deploy
 version:        0.1.12
@@ -59,6 +59,8 @@ library
       Deploy.Execute.Core
       Deploy.Initiate.Core
   other-modules:
+      Deploy.Execute
+      Deploy.Initiate
       Deploy.Notification.Conf
       Deploy.Notification.Core
       Deploy.Notification.Types

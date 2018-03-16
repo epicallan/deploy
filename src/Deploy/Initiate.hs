@@ -1,14 +1,14 @@
 -- | Initates project upload
 -- - get a list of files / folders to bundle up using git if no config with specified file upload exist.
 -- - When a files or files are specified for upload, they are not archived by git.
+
 module Deploy.Initiate (runDeploy) where
 
 import           Protolude                    hiding (Text)
 
 import           Data.String                  (String)
 import           Data.Text
-import qualified Data.Text.Lazy               as TL
-import           Deploy.Types                 (Repo (..))
+import           Deploy.Types                 (DeployError (..), Repo (..))
 import           Dhall                        hiding (Text)
 import           Network.HTTP.Client          (Request (..),
                                                defaultManagerSettings, httpLbs,
@@ -22,18 +22,9 @@ import           System.Posix.Files           (fileExist)
 import           System.Process               (callCommand)
 import           Util                         as U (split)
 
+import qualified Data.Text.Lazy               as TL
+
 -- | read in config file if exists
--- | Gets repo's path
--- | get repo name from current directory's name or from config name
-
-data IniateError =
-    MissingConfigError
-  | NoRepoName
-  | MissingDeloyIPError
-  | RepoDetailsConfigError deriving (Show)
-
-instance Exception  IniateError
-
 getConfig :: String -> IO (Maybe Repo)
 getConfig repoPath = do
   let configPath = repoPath ++ "/deploy.dhall"
@@ -42,6 +33,7 @@ getConfig repoPath = do
     input auto (TL.pack configPath) >>= pure . Just
     else pure Nothing
 
+-- | Gets repo's path
 getRepoDetails :: IO (Maybe Repo)
 getRepoDetails = do
   path     <- liftIO getCurrentDirectory
@@ -88,26 +80,28 @@ archiveFiles = do
         callCommand $ "tar -zcvf " <> name <> ".tar.gz" <> repoTmpDir
         pure $ repoTmpDir ++ ".tar.gz"
 
--- TODO: add progress bar
 uploadFile :: String -> ReaderT Repo IO ()
 uploadFile archivePath = do
   repo <- ask
   manager <- liftIO $ newManager defaultManagerSettings
   case deployIP repo of
     Nothing -> throwIO MissingDeloyIPError
-    Just address -> do
-      initReq <- parseRequest $ unpack address ++ "/upload"
-      body    <- liftIO $ observedStreamFile streamingStatus archivePath
-      let req = initReq {requestBody = body, method = "POST"}
-      resp <- liftIO (httpLbs req manager)
-      liftIO $ print resp
+    Just address ->
+      case repoName repo of
+        Nothing -> throwIO NoRepoName
+        Just name -> do
+          initReq <- parseRequest $ unpack address ++ "/upload/" ++ unpack name
+          body    <- liftIO $ observedStreamFile streamingStatus archivePath
+          let req = initReq {requestBody = body, method = "POST"}
+          resp <- liftIO (httpLbs req manager)
+          liftIO $ print resp
   where
     streamingStatus :: StreamFileStatus -> IO ()
     streamingStatus status =
-      print $  "\n read so far: " <> (show (readSoFar status) :: Text)
+      let progress = (readSoFar status `div` fileSize status ) * 100
+      in print $  "\n upload progress so far: " <> (show progress :: Text) <> "%"
 
--- cleanup ::  ReaderT Repo IO ()
-
+-- | archive project and upload it upstream
 runDeploy :: IO ()
 runDeploy = do
   repoM <- getRepoDetails
