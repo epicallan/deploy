@@ -23,7 +23,9 @@ from dockhub
 docker run -it -d -p 8888:8888 -v /var/run/docker.sock:/var/run/docker.sock --name deploy-app epicallan/deploy
 ```
 
-Example config file
+This app requires a config file in the projects being deployed.
+
+An example deploy config file for a simple build in .dhll file format
 
 ```
 
