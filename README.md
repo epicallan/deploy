@@ -20,5 +20,17 @@ from dockhub
 
 ```
 
-docker run -it -d -P -v /var/run/docker.sock:/var/run/docker.sock --name deploy-app epicallan/deploy
+docker run -it -d -p 8888:8888 -v /var/run/docker.sock:/var/run/docker.sock --name deploy-app epicallan/deploy
+```
+
+Example config file
+
+```
+
+{
+      repoName   = [] : Optional Text
+    , repoFiles  = [] : Optional (List Text)
+    , deployIP   = "http://localhost:8888" : Text
+}
+
 ```

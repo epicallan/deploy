@@ -8,18 +8,21 @@ import           Protolude
 
 import           Control.Exception.Safe (MonadMask)
 import           Data.Text              (unpack)
-import           Deploy.Types           (DeployError (..), Repo (..))
+import           Deploy.Types           (RepoEx (..))
 import           Docker.Client          hiding (name, path)
+import           System.Directory       (createDirectory, removeDirectory)
 import           System.Process         (callCommand)
 
 
-unarchiveFile :: ReaderT Repo IO ()
+unarchiveFile :: ReaderT RepoEx IO ()
 unarchiveFile = do
   repo <- ask
-  case uploadPath repo of
-    Nothing -> liftIO $ throwIO  MissingUploadPath
-    Just filePath ->
-        liftIO $ callCommand (unpack $ "tar xzvf " <> filePath)
+  let archivePath = rxArchivePath repo
+  let uploadsPath = rxUploadPath repo
+  let newFileDir  = uploadsPath <> rxName repo
+  liftIO $ print archivePath
+  liftIO $ createDirectory (unpack newFileDir)
+  liftIO $ callCommand (unpack $ "tar xzvf " <> archivePath <> " -C" <> newFileDir)
 
 
 runDocker ::(MonadMask m, MonadIO m) => DockerT m b -> m b
@@ -29,18 +32,19 @@ runDocker f = do
 
 -- | builds docker container from dockerfile, we publish all exposed ports in dockerfile on host
 -- TODO: we could probably provide an option in the config file for listing the ports to publish
-buildContainer :: ReaderT Repo IO (Either DockerError ContainerID)
+buildContainer :: ReaderT RepoEx IO (Either DockerError ContainerID)
 buildContainer  = do
   repo <- ask
-  case repoName repo of
-    Nothing ->  liftIO $ throwIO  NoRepoName
-    Just name -> do
-      let  imageName = name <> ":latest"
-      runDocker $ do
-        eResult <- buildImageFromDockerfile (defaultBuildOpts imageName) ("/uploads" <> unpack name)
-        case eResult of
-          Left err -> pure $  Left err
-          Right _  -> createContainer (createOptions imageName) (Just name)
+  let name           = rxName repo
+  let uploadFilePath = rxUploadPath repo <> name
+  let imageName      = name <> ":latest"
+  runDocker $ do
+    eResult <-
+      buildImageFromDockerfile (defaultBuildOpts imageName) (unpack uploadFilePath)
+    liftIO $ removeDirectory (unpack uploadFilePath) -- clean up
+    case eResult of
+      Left err -> pure $  Left err
+      Right _  -> createContainer (createOptions imageName) (Just name)
   where
     createOptions :: Text -> CreateOpts
     createOptions imageName =

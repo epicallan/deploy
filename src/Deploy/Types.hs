@@ -2,7 +2,8 @@
 module Deploy.Types
     (
       Status (..)
-    , Repo (..)
+    , RepoInit (..)
+    , RepoEx (..)
     , DeployError (..)
     ) where
 
@@ -24,24 +25,32 @@ data Status
 instance FromJSON Status
 instance ToJSON Status
 
-
-data Repo =
-     Repo {
-        repoName   :: Maybe Text
-    ,   uploadPath :: Maybe Text
-    ,   repoFiles  :: Maybe [Text]
-    ,   deployIP   :: Maybe Text
+data RepoInit =
+    RepoInit {
+        riName     :: Maybe Text
+    ,   riFiles    :: Maybe [Text]
+    ,   riDeployIP :: Text
     } deriving (Generic, Show)
 
-instance FromJSON Repo
-instance ToJSON Repo
-instance Interpret Repo
+instance FromJSON RepoInit
+instance ToJSON RepoInit
+instance Interpret RepoInit
+
+data RepoEx =
+    RepoEx {
+        rxName        :: Text
+    ,   rxUploadPath  :: Text
+    ,   rxArchivePath :: Text
+    } deriving (Generic, Show)
+
+instance FromJSON RepoEx
+instance ToJSON RepoEx
+
 
 data DeployError =
     MissingConfigError
   | NoRepoName
   | MissingDeloyIPError
-  | MissingUploadPath
   | RepoDetailsConfigError deriving (Show)
 
 instance Exception  DeployError

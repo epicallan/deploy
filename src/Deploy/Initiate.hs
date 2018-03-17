@@ -8,7 +8,7 @@ import           Protolude                    hiding (Text)
 
 import           Data.String                  (String)
 import           Data.Text
-import           Deploy.Types                 (DeployError (..), Repo (..))
+import           Deploy.Types                 (DeployError (..), RepoInit (..))
 import           Dhall                        hiding (Text)
 import           Network.HTTP.Client          (Request (..),
                                                defaultManagerSettings, httpLbs,
@@ -25,7 +25,7 @@ import           Util                         as U (split)
 import qualified Data.Text.Lazy               as TL
 
 -- | read in config file if exists
-getConfig :: String -> IO (Maybe Repo)
+getConfig :: String -> IO (Maybe RepoInit)
 getConfig repoPath = do
   let configPath = repoPath ++ "/deploy.dhall"
   hasConfigFile <- liftIO $ fileExist configPath
@@ -34,17 +34,16 @@ getConfig repoPath = do
     else pure Nothing
 
 -- | Gets repo's path
-getRepoDetails :: IO (Maybe Repo)
+getRepoDetails :: IO (Maybe RepoInit)
 getRepoDetails = do
   path     <- liftIO getCurrentDirectory
   confM    <- getConfig path
   case confM of
     Nothing   -> liftIO $ throwIO  MissingConfigError
-    Just conf -> pure $ Repo
-              <$> Just (repoName conf <|> dirName path)
-              <*> Just mempty
-              <*> Just (repoFiles conf)
-              <*> Just (deployIP conf)
+    Just conf -> pure $ RepoInit
+              <$> Just (riName conf <|> dirName path)
+              <*> Just (riFiles conf)
+              <*> Just (riDeployIP conf)
   where
     dirName :: String -> Maybe Text
     dirName   = lastMay . fmap pack . U.split '/'
@@ -53,13 +52,13 @@ getRepoDetails = do
 -- | zip files in file list or default to zipping files under git
 -- | TODO: for git based uploads, only upload what has changed
 -- | perf consideration turn upload into a binary and upload chunks
-archiveFiles :: ReaderT Repo IO String
+archiveFiles :: ReaderT RepoInit IO String
 archiveFiles = do
   repo <- ask
-  case repoName repo of
-    Nothing       -> liftIO $ throwIO NoRepoName
+  case riName repo of
+    Nothing   -> liftIO $ throwIO NoRepoName
     Just name ->
-      case repoFiles repo of
+      case riFiles repo of
         Just files -> liftIO $ gzipFiles (unpack name) files
         Nothing    -> liftIO $ gitArchiveFiles (unpack name)
 
@@ -80,21 +79,19 @@ archiveFiles = do
         callCommand $ "tar -zcvf " <> name <> ".tar.gz" <> repoTmpDir
         pure $ repoTmpDir ++ ".tar.gz"
 
-uploadFile :: String -> ReaderT Repo IO ()
+uploadFile :: String -> ReaderT RepoInit IO ()
 uploadFile archivePath = do
   repo <- ask
+  let address = riDeployIP repo
   manager <- liftIO $ newManager defaultManagerSettings
-  case deployIP repo of
-    Nothing -> throwIO MissingDeloyIPError
-    Just address ->
-      case repoName repo of
-        Nothing -> throwIO NoRepoName
-        Just name -> do
-          initReq <- parseRequest $ unpack address ++ "/upload/" ++ unpack name
-          body    <- liftIO $ observedStreamFile streamingStatus archivePath
-          let req = initReq {requestBody = body, method = "POST"}
-          resp <- liftIO (httpLbs req manager)
-          liftIO $ print resp
+  case riName repo of
+    Nothing -> throwIO NoRepoName
+    Just name -> do
+      initReq <- parseRequest $ unpack address ++ "/upload/" ++ unpack name
+      body    <- liftIO $ observedStreamFile streamingStatus archivePath
+      let req = initReq {requestBody = body, method = "POST"}
+      resp <- liftIO (httpLbs req manager)
+      liftIO $ print resp
   where
     streamingStatus :: StreamFileStatus -> IO ()
     streamingStatus status =

@@ -10,12 +10,13 @@ import           GHC.IO.Handle                        (BufferMode (BlockBufferin
                                                        hSetBinaryMode,
                                                        hSetBuffering)
 import           Network.Wai.Middleware.RequestLogger (logStdoutDev)
+import           System.Directory                     (getCurrentDirectory)
 import           Web.Scotty
 
 import           Deploy.Execute                       (buildContainer,
                                                        runContainer,
                                                        unarchiveFile)
-import           Deploy.Types                         (Repo (..))
+import           Deploy.Types                         (RepoEx (..))
 
 import qualified Blaze.ByteString.Builder             as B
 import qualified Data.ByteString                      as BS
@@ -32,9 +33,11 @@ startApp = scotty 8888 $ do
     post "/upload/:name" $ do
         (name :: Text) <- param "name"
         rd             <- bodyReader
-        let uploadArchivePath = "uploads/" <> name <> ".tar.gz"
-        let writeHandle       =  openFile (T.unpack uploadArchivePath) WriteMode
-        let repo              = Repo (Just name) (Just uploadArchivePath) Nothing Nothing
+        basePath <- liftIO getCurrentDirectory
+        let uploadPath = basePath <> "/uploads/"
+        let fileArchive = uploadPath <> T.unpack name <> ".tar.gz"
+        let writeHandle = openFile fileArchive WriteMode
+        let repo        = RepoEx name (T.pack uploadPath) (T.pack fileArchive)
         let buildFile acc     = do -- accumulates a builder
                     chunk <- rd
                     let len      = BS.length chunk
@@ -49,11 +52,12 @@ startApp = scotty 8888 $ do
         liftIO $ hSetBuffering wHandle (BlockBuffering Nothing)
         liftIO $ hPutBuilder wHandle builder
         liftIO $ runReaderT unarchiveFile repo
-        ebuildResults <- liftIO $ runReaderT buildContainer repo
-        case ebuildResults of
-            Left err  ->  text $ show err
-            Right containerId -> do
-                erunResult <- liftIO $ runContainer containerId
-                case erunResult of
-                    Left err ->  text $ show err
-                    Right _  ->  text $ "started container for: " <> L.fromStrict name
+        text "archived files"
+        -- ebuildResults <- liftIO $ runReaderT buildContainer repo
+        -- case ebuildResults of
+        --     Left err  ->  text $ show err
+        --     Right containerId -> do
+        --         erunResult <- liftIO $ runContainer containerId
+        --         case erunResult of
+        --             Left err ->  text $ show err
+        --             Right _  ->  text $ "started container for: " <> L.fromStrict name
