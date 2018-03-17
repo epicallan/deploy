@@ -10,19 +10,14 @@ import           Control.Exception.Safe (MonadMask)
 import           Data.Text              (unpack)
 import           Deploy.Types           (RepoEx (..))
 import           Docker.Client          hiding (name, path)
-import           System.Directory       (createDirectory, removeDirectory)
 import           System.Process         (callCommand)
-
 
 unarchiveFile :: ReaderT RepoEx IO ()
 unarchiveFile = do
   repo <- ask
   let archivePath = rxArchivePath repo
-  let uploadsPath = rxUploadPath repo
-  let newFileDir  = uploadsPath <> rxName repo
-  liftIO $ print archivePath
-  liftIO $ createDirectory (unpack newFileDir)
-  liftIO $ callCommand (unpack $ "tar xzvf " <> archivePath <> " -C" <> newFileDir)
+  let uploadPath = rxUploadPath repo
+  liftIO $ callCommand $ unpack $ "tar xzvf " <> archivePath <> " -C " <> uploadPath
 
 
 runDocker ::(MonadMask m, MonadIO m) => DockerT m b -> m b
@@ -36,15 +31,14 @@ buildContainer :: ReaderT RepoEx IO (Either DockerError ContainerID)
 buildContainer  = do
   repo <- ask
   let name           = rxName repo
-  let uploadFilePath = rxUploadPath repo <> name
-  let imageName      = name <> ":latest"
+  let uploadFilePath = rxUploadPath repo
+  let imageName      = name <> ":al"
   runDocker $ do
     eResult <-
       buildImageFromDockerfile (defaultBuildOpts imageName) (unpack uploadFilePath)
-    liftIO $ removeDirectory (unpack uploadFilePath) -- clean up
     case eResult of
       Left err -> pure $  Left err
-      Right _  -> createContainer (createOptions imageName) (Just name)
+      Right _  -> createContainer (createOptions imageName) Nothing
   where
     createOptions :: Text -> CreateOpts
     createOptions imageName =

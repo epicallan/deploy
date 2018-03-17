@@ -7,10 +7,13 @@ import           Protolude                            hiding (decodeUtf8, get)
 import           Data.ByteString.Builder              (hPutBuilder)
 
 import           GHC.IO.Handle                        (BufferMode (BlockBuffering),
-                                                       hSetBinaryMode,
+                                                       hClose, hSetBinaryMode,
                                                        hSetBuffering)
 import           Network.Wai.Middleware.RequestLogger (logStdoutDev)
-import           System.Directory                     (getCurrentDirectory)
+import           System.Directory                     (createDirectoryIfMissing,
+                                                       getCurrentDirectory,
+                                                       removeDirectoryRecursive)
+
 import           Web.Scotty
 
 import           Deploy.Execute                       (buildContainer,
@@ -33,12 +36,13 @@ startApp = scotty 8888 $ do
     post "/upload/:name" $ do
         (name :: Text) <- param "name"
         rd             <- bodyReader
-        basePath <- liftIO getCurrentDirectory
-        let uploadPath = basePath <> "/uploads/"
-        let fileArchive = uploadPath <> T.unpack name <> ".tar.gz"
-        let writeHandle = openFile fileArchive WriteMode
-        let repo        = RepoEx name (T.pack uploadPath) (T.pack fileArchive)
-        let buildFile acc     = do -- accumulates a builder
+        currentDir        <- liftIO getCurrentDirectory
+        let uploadPath   = T.pack currentDir <> "/" <> "uploads" <> "/" <> name
+        liftIO $ createDirectoryIfMissing True (T.unpack uploadPath)
+        let fileArchive   = uploadPath <> "/" <> name <> ".tar.gz"
+        let writeHandle   = openFile (T.unpack fileArchive) ReadWriteMode
+        let repo          = RepoEx name uploadPath fileArchive
+        let buildFile acc = do -- accumulates a builder
                     chunk <- rd
                     let len      = BS.length chunk
                     let newBuilderChunk = acc <> B.insertByteString chunk
@@ -46,18 +50,20 @@ startApp = scotty 8888 $ do
                         then buildFile newBuilderChunk
                         else return acc
         builder <- liftIO $ buildFile mempty
-        _       <-  return B.flush
+        _       <- return B.flush
         wHandle <- liftIO writeHandle
         liftIO $ hSetBinaryMode wHandle True
         liftIO $ hSetBuffering wHandle (BlockBuffering Nothing)
         liftIO $ hPutBuilder wHandle builder
+        liftIO $ hClose wHandle
         liftIO $ runReaderT unarchiveFile repo
-        text "archived files"
-        -- ebuildResults <- liftIO $ runReaderT buildContainer repo
-        -- case ebuildResults of
-        --     Left err  ->  text $ show err
-        --     Right containerId -> do
-        --         erunResult <- liftIO $ runContainer containerId
-        --         case erunResult of
-        --             Left err ->  text $ show err
-        --             Right _  ->  text $ "started container for: " <> L.fromStrict name
+        ebuildResults <- liftIO $ runReaderT buildContainer repo
+        case ebuildResults of
+            Left err  ->  text $ show err
+            Right containerId -> do
+                erunResult <- liftIO $ runContainer containerId
+                -- clean up
+                liftIO $ removeDirectoryRecursive (T.unpack uploadPath)
+                case erunResult of
+                    Left err ->  text $ "docker error: " <> show err
+                    Right _  ->  text $ "started container for: " <> L.fromStrict name

@@ -54,7 +54,7 @@ library:
   - safe-exceptions
   - scotty
   - temporary
-  - text 
+  - text
   - unix
   - wai
   - wai-extra
