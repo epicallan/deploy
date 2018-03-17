@@ -6,6 +6,8 @@ RUN mkdir /src
 
 WORKDIR /src
 
+RUN mkdir uploads
+
 RUN apt-get update
 
 RUN apt-get -y install wget unzip libgmp-dev 
