@@ -5,10 +5,20 @@
 
 Inspired by now.js and [capatainduck](https://github.com/githubsaturn/captainduckduck/issues)
 
-## Install & deploy with docker
+## Install
+-------------
+
+from source
 
 ```
 docker build -t deploy .
 
-docker run -it -d -p 8888:8888 -v /var/run/docker.sock:/var/run/docker.sock --name deploy-app deploy
+docker run -it -d -P -v /var/run/docker.sock:/var/run/docker.sock --name deploy-app deploy
+```
+
+from dockhub
+
+```
+
+docker run -it -d -P -v /var/run/docker.sock:/var/run/docker.sock --name deploy-app epicallan/deploy
 ```

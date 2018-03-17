@@ -12,10 +12,11 @@ RUN apt-get update
 
 RUN apt-get -y install wget unzip libgmp-dev 
 
-RUN wget https://github.com/epicallan/deploy/releases/download/0.1.12/deploy-build.zip
+RUN wget https://github.com/epicallan/deploy/releases/download/0.2.0/deploy-build.zip
 
 RUN unzip -q deploy-build.zip
 
 EXPOSE 8888
 
 CMD ["/src/deploy-build/deploy-exe"]
+ 
