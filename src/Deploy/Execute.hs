@@ -1,8 +1,5 @@
 -- | Executes dockerfile or docker-compose script in upload
-module Deploy.Execute (
-    buildContainer
-  , runContainer
-  , unarchiveFile) where
+module Deploy.Execute (executeDeploy) where
 
 import           Protolude
 
@@ -10,6 +7,7 @@ import           Control.Exception.Safe (MonadMask)
 import           Data.Text              (unpack)
 import           Deploy.Types           (RepoEx (..))
 import           Docker.Client          hiding (name, path)
+import           System.Directory       (removeDirectoryRecursive)
 import           System.Process         (callCommand)
 
 unarchiveFile :: ReaderT RepoEx IO ()
@@ -48,3 +46,17 @@ buildContainer  = do
 runContainer :: ContainerID -> IO (Either DockerError ())
 runContainer dContainerId = liftIO $
   runDocker $ startContainer defaultStartOpts dContainerId
+
+executeDeploy :: RepoEx -> IO Text
+executeDeploy repo = do
+  liftIO $ runReaderT unarchiveFile repo
+  ebuildResults <- liftIO $ runReaderT buildContainer repo
+  case ebuildResults of
+      Left err          -> pure $ show err
+      Right containerId -> do
+          erunResult <- liftIO $ runContainer containerId
+          -- clean up
+          liftIO $ removeDirectoryRecursive (unpack $ rxUploadPath repo)
+          case erunResult of
+              Left err ->  pure $ show err
+              Right _  ->  pure $ "Deployed container for " <> rxName repo

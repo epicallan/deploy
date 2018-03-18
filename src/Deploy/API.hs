@@ -11,14 +11,11 @@ import           GHC.IO.Handle                        (BufferMode (BlockBufferin
                                                        hSetBuffering)
 import           Network.Wai.Middleware.RequestLogger (logStdoutDev)
 import           System.Directory                     (createDirectoryIfMissing,
-                                                       getCurrentDirectory,
-                                                       removeDirectoryRecursive)
+                                                       getCurrentDirectory)
 
 import           Web.Scotty
 
-import           Deploy.Execute                       (buildContainer,
-                                                       runContainer,
-                                                       unarchiveFile)
+import           Deploy.Execute                       (executeDeploy)
 import           Deploy.Types                         (RepoEx (..))
 
 import qualified Blaze.ByteString.Builder             as B
@@ -56,14 +53,7 @@ startApp = scotty 8888 $ do
         liftIO $ hSetBuffering wHandle (BlockBuffering Nothing)
         liftIO $ hPutBuilder wHandle builder
         liftIO $ hClose wHandle
-        liftIO $ runReaderT unarchiveFile repo
-        ebuildResults <- liftIO $ runReaderT buildContainer repo
-        case ebuildResults of
-            Left err          ->  text $ show err
-            Right containerId -> do
-                erunResult <- liftIO $ runContainer containerId
-                -- clean up
-                liftIO $ removeDirectoryRecursive (T.unpack uploadPath)
-                case erunResult of
-                    Left err ->  text $ "docker error: " <> show err
-                    Right _  ->  text $ "started container for: " <> L.fromStrict name
+        -- have an async function with two parallel computations. In one we stream endlesss &
+        -- in the other we exit the route on recieving values
+        textResult <- liftIO $ executeDeploy repo
+        text $ L.fromStrict textResult
