@@ -44,7 +44,7 @@ startApp = scotty 8888 $ do
         let repo          = RepoEx name uploadPath fileArchive
         let buildFile acc = do -- accumulates a builder
                     chunk <- rd
-                    let len      = BS.length chunk
+                    let len             = BS.length chunk
                     let newBuilderChunk = acc <> B.insertByteString chunk
                     if len > 0
                         then buildFile newBuilderChunk
@@ -59,7 +59,7 @@ startApp = scotty 8888 $ do
         liftIO $ runReaderT unarchiveFile repo
         ebuildResults <- liftIO $ runReaderT buildContainer repo
         case ebuildResults of
-            Left err  ->  text $ show err
+            Left err          ->  text $ show err
             Right containerId -> do
                 erunResult <- liftIO $ runContainer containerId
                 -- clean up
