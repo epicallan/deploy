@@ -28,7 +28,7 @@ opts :: Options
 opts = def { verbose = 0
            , settings = setTimeout 12000 $ setPort 8888 $ settings def
            }
-
+-- TODO: stream indications of whats going on during deployment
 startApp :: IO ()
 startApp = scottyOpts opts $ do
     -- Add any WAI middleware, they are run top-down.
@@ -59,7 +59,5 @@ startApp = scottyOpts opts $ do
         liftIO $ hSetBuffering wHandle (BlockBuffering Nothing)
         liftIO $ hPutBuilder wHandle builder
         liftIO $ hClose wHandle
-        -- have an async function with two parallel computations. In one we stream endlesss &
-        -- in the other we exit the route on recieving values. This maybe accomplished by calling next or raise
         textResult <- liftIO $ executeDeploy repo
         text $ L.fromStrict textResult
