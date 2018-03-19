@@ -5,10 +5,11 @@ module Deploy.API (startApp) where
 import           Protolude                            hiding (decodeUtf8, get)
 
 import           Data.ByteString.Builder              (hPutBuilder)
-
+import           Data.Default.Class                   (def)
 import           GHC.IO.Handle                        (BufferMode (BlockBuffering),
                                                        hClose, hSetBinaryMode,
                                                        hSetBuffering)
+import           Network.Wai.Handler.Warp             (setPort, setTimeout)
 import           Network.Wai.Middleware.RequestLogger (logStdoutDev)
 import           System.Directory                     (createDirectoryIfMissing,
                                                        getCurrentDirectory)
@@ -23,8 +24,13 @@ import qualified Data.ByteString                      as BS
 import qualified Data.Text                            as T
 import qualified Data.Text.Lazy                       as L
 
+opts :: Options
+opts = def { verbose = 0
+           , settings = setTimeout 12000 $ setPort 8888 $ settings def
+           }
+
 startApp :: IO ()
-startApp = scotty 8888 $ do
+startApp = scottyOpts opts $ do
     -- Add any WAI middleware, they are run top-down.
     middleware logStdoutDev
 
@@ -54,6 +60,6 @@ startApp = scotty 8888 $ do
         liftIO $ hPutBuilder wHandle builder
         liftIO $ hClose wHandle
         -- have an async function with two parallel computations. In one we stream endlesss &
-        -- in the other we exit the route on recieving values
+        -- in the other we exit the route on recieving values. This maybe accomplished by calling next or raise
         textResult <- liftIO $ executeDeploy repo
         text $ L.fromStrict textResult

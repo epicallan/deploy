@@ -1,5 +1,5 @@
 name: deploy
-version: '0.2.1'
+version: '0.2.2'
 category: Web
 author: Lukwago Allan
 maintainer: epicallan.al@gmail.com
@@ -43,6 +43,7 @@ library:
   - dhall
   - directory
   - docker
+  - data-default-class
   - ghc
   - HaskellNet 
   - http-client

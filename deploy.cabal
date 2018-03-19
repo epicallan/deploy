@@ -2,7 +2,7 @@
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: c4d65ecc13167d3a4369e13916ec7db94df88f6bc039ddae71bd20c7dc357363
+-- hash: a44ca1e45909f17f1a148d681c0047086f5a7a2e710521b4d60afb10d2e4b1f0
 
 name:           deploy
 version:        0.2.1
@@ -35,6 +35,7 @@ library
     , base
     , blaze-builder
     , bytestring
+    , data-default-class
     , dhall
     , directory
     , docker
