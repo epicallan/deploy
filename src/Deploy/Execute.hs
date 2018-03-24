@@ -47,16 +47,17 @@ runContainer :: ContainerID -> IO (Either DockerError ())
 runContainer dContainerId = liftIO $
   runDocker $ startContainer defaultStartOpts dContainerId
 
-executeDeploy :: RepoEx -> IO Text
+executeDeploy :: RepoEx -> IO ()
 executeDeploy repo = do
   liftIO $ runReaderT unarchiveFile repo
   ebuildResults <- liftIO $ runReaderT buildContainer repo
   case ebuildResults of
-      Left err          -> pure $ show err
+      Left err          -> print err
       Right containerId -> do
           erunResult <- liftIO $ runContainer containerId
           -- clean up
           liftIO $ removeDirectoryRecursive (unpack $ rxUploadPath repo)
+          -- TDDO: send notification fo successful deployment
           case erunResult of
-              Left err ->  pure $ show err
-              Right _  ->  pure $ "Deployed container for " <> rxName repo
+              Left err ->  print err
+              Right _  ->  print $ "Deployed container for " <> rxName repo

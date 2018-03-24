@@ -37,6 +37,7 @@ library:
   - Deploy.Initiate
   dependencies:
   - aeson
+  - async
   - base
   - blaze-builder
   - bytestring

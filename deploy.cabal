@@ -2,7 +2,7 @@
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: cf088f8024f186adb89c790da52b105411b21506383ee7a2bde51894b090a9e5
+-- hash: ed8064af06a2e6d54f62b23e98c5c5956cb752293e04cdf280af9cffdc93aad4
 
 name:           deploy
 version:        0.2.4
@@ -32,6 +32,7 @@ library
   build-depends:
       HaskellNet
     , aeson
+    , async
     , base
     , blaze-builder
     , bytestring

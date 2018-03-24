@@ -25,7 +25,7 @@ import qualified Data.Text                            as T
 import qualified Data.Text.Lazy                       as L
 
 opts :: Options
-opts = def { verbose = 0
+opts = def { verbose = 1
            , settings = setTimeout 1000000 $ setPort 8888 $ settings def
            }
 -- TODO: stream indications of whats going on during deployment
@@ -59,5 +59,5 @@ startApp = scottyOpts opts $ do
         liftIO $ hSetBuffering wHandle (BlockBuffering Nothing)
         liftIO $ hPutBuilder wHandle builder
         liftIO $ hClose wHandle
-        textResult <- liftIO $ executeDeploy repo
-        text $ L.fromStrict textResult
+        _ <- liftIO $ forkIO $ executeDeploy repo
+        text $ L.fromStrict $ "successfully started deployment for" <> rxName repo
