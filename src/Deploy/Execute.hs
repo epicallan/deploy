@@ -37,12 +37,14 @@ buildContainer  = do
     case eResult of
       Left err -> pure $  Left err
       -- TODO: check if there is a container with same name & delete it
-      Right _  -> createContainer (createOptions $ name <> "-app") Nothing
+      -- also pass in a container name option to createOptions
+      Right _  -> createContainer (createOptions imageName) Nothing
   where
     createOptions :: Text -> CreateOpts
-    createOptions containerName =
+    createOptions imageName =
+      -- TODO: Used port in dockerfile is not being used
       let cHostConfig = defaultHostConfig { publishAllPorts = True }
-      in CreateOpts { containerConfig = defaultContainerConfig containerName, hostConfig = cHostConfig }
+      in CreateOpts { containerConfig = defaultContainerConfig imageName, hostConfig = cHostConfig }
 
 runContainer :: ContainerID -> IO (Either DockerError ())
 runContainer dContainerId = liftIO $

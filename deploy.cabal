@@ -2,10 +2,10 @@
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: ed8064af06a2e6d54f62b23e98c5c5956cb752293e04cdf280af9cffdc93aad4
+-- hash: bca33f68bf53491f6ce8f2fdc58a683b7df07d82d7cacd2dac4454b0e410dd34
 
 name:           deploy
-version:        0.2.4
+version:        0.2.6
 category:       Web
 homepage:       https://github.com/epicallan/deploy#readme
 bug-reports:    https://github.com/epicallan/deploy/issues
@@ -32,7 +32,6 @@ library
   build-depends:
       HaskellNet
     , aeson
-    , async
     , base
     , blaze-builder
     , bytestring
