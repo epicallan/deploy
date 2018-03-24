@@ -26,7 +26,7 @@ import qualified Data.Text.Lazy                       as L
 
 opts :: Options
 opts = def { verbose = 0
-           , settings = setTimeout 12000 $ setPort 8888 $ settings def
+           , settings = setTimeout 1000000 $ setPort 8888 $ settings def
            }
 -- TODO: stream indications of whats going on during deployment
 startApp :: IO ()
