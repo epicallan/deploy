@@ -60,4 +60,4 @@ startApp = scottyOpts opts $ do
         liftIO $ hPutBuilder wHandle builder
         liftIO $ hClose wHandle
         _ <- liftIO $ forkIO $ executeDeploy repo
-        text $ L.fromStrict $ "successfully started deployment for" <> rxName repo
+        text $ L.fromStrict $ "successfully started deployment for: " <> rxName repo

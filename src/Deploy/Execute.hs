@@ -30,18 +30,19 @@ buildContainer  = do
   repo <- ask
   let name           = rxName repo
   let uploadFilePath = rxUploadPath repo
-  let imageName      = name <> ":al"
+  let imageName      = name <> ":latest"
   runDocker $ do
     eResult <-
       buildImageFromDockerfile (defaultBuildOpts imageName) (unpack uploadFilePath)
     case eResult of
       Left err -> pure $  Left err
-      Right _  -> createContainer (createOptions imageName) Nothing
+      -- TODO: check if there is a container with same name & delete it
+      Right _  -> createContainer (createOptions $ name <> "-app") Nothing
   where
     createOptions :: Text -> CreateOpts
-    createOptions imageName =
+    createOptions containerName =
       let cHostConfig = defaultHostConfig { publishAllPorts = True }
-      in CreateOpts { containerConfig = defaultContainerConfig imageName, hostConfig = cHostConfig }
+      in CreateOpts { containerConfig = defaultContainerConfig containerName, hostConfig = cHostConfig }
 
 runContainer :: ContainerID -> IO (Either DockerError ())
 runContainer dContainerId = liftIO $
