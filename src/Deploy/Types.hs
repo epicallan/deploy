@@ -27,9 +27,9 @@ instance ToJSON Status
 
 data RepoInit =
     RepoInit {
-        riName     :: Maybe Text
-    ,   riFiles    :: Maybe [Text]
-    ,   riDeployIP :: Text
+      name     :: Maybe Text
+    , files    :: Maybe [Text]
+    , deployIP :: Text
     } deriving (Generic, Show)
 
 instance FromJSON RepoInit

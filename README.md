@@ -30,9 +30,10 @@ An example deploy config file for a simple build in .dhll file format
 ```
 
 {
-      repoName   = [] : Optional Text
-    , repoFiles  = [] : Optional (List Text)
-    , deployIP   = "http://localhost:8888" : Text
+      name        = [] : Optional Text
+    , files       = [] : Optional (List Text)
+    , deployIP    = "http://localhost:8888" : Text
+    , port        = 9999 : Integer
 }
 
 ```

@@ -49,7 +49,9 @@ library:
   - http-client
   - http-conduit
   - http-types
+  - megaparsec
   - network
+  - parsec
   - process
   - protolude
   - safe-exceptions

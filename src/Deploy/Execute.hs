@@ -6,9 +6,12 @@ import           Protolude
 import           Control.Exception.Safe (MonadMask)
 import           Data.Text              (unpack)
 import           Deploy.Types           (RepoEx (..))
+import           Data.String                  (String)
 import           Docker.Client          hiding (name, path)
 import           System.Directory       (removeDirectoryRecursive)
 import           System.Process         (callCommand)
+import System.IO (hGetContents)
+import qualified Text.Parsec            as P
 
 unarchiveFile :: ReaderT RepoEx IO ()
 unarchiveFile = do
@@ -32,19 +35,43 @@ buildContainer  = do
   let uploadFilePath = rxUploadPath repo
   let imageName      = name <> ":latest"
   runDocker $ do
+    cPort    <- liftIO $ getContainerPort uploadFilePath
     eResult <-
       buildImageFromDockerfile (defaultBuildOpts imageName) (unpack uploadFilePath)
     case eResult of
       Left err -> pure $  Left err
-      -- TODO: check if there is a container with same name & delete it
-      -- also pass in a container name option to createOptions
-      Right _  -> createContainer (createOptions imageName) Nothing
+      -- TODO: should delete prev container
+      Right _  -> createContainer (createOptions imageName cPort) Nothing
   where
-    createOptions :: Text -> CreateOpts
-    createOptions imageName =
-      -- TODO: Used port in dockerfile is not being used
-      let cHostConfig = defaultHostConfig { publishAllPorts = True }
-      in CreateOpts { containerConfig = defaultContainerConfig imageName, hostConfig = cHostConfig }
+    createOptions :: Text -> Integer -> CreateOpts
+    createOptions imageName port = defaultCreateOpts imageName
+                              & addPortBinding (PortBinding port TCP [HostPort "0.0.0.0" port])
+                              & addExposedPort (ExposedPort port TCP)
+
+-- | gets the exposed port in a docker file
+getContainerPort :: Text -> IO Integer
+getContainerPort dockerContextPath = withFile dockerfilePath ReadMode parseDockerFile
+   where
+    dockerfilePath :: String
+    dockerfilePath = unpack $ dockerContextPath <> "/Dockerfile"
+
+  
+parseDockerFile :: Handle -> IO Integer
+parseDockerFile handle = do
+  contents <- hGetContents handle
+  pure 9999
+
+
+-- portParseRule :: P.Parsec String () String
+-- portParseRule = do
+--   P.many P.digit
+--   P.char ','
+--   return $ P.many (P.digit <|> P.space)
+
+
+parse :: P.Stream s Identity t => P.Parsec s () a -> s -> Either P.ParseError a
+parse rule = P.parse rule "(source)"
+
 
 runContainer :: ContainerID -> IO (Either DockerError ())
 runContainer dContainerId = liftIO $

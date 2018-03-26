@@ -2,7 +2,7 @@
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: bca33f68bf53491f6ce8f2fdc58a683b7df07d82d7cacd2dac4454b0e410dd34
+-- hash: d64a70c859442aa4c48226f02b9d796c4dc2c59c26434ff1adfb9fff1551b9f0
 
 name:           deploy
 version:        0.2.6
@@ -43,7 +43,9 @@ library
     , http-client
     , http-conduit
     , http-types
+    , megaparsec
     , network
+    , parsec
     , process
     , protolude
     , safe-exceptions

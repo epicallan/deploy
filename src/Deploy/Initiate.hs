@@ -41,9 +41,9 @@ getRepoDetails = do
   case confM of
     Nothing   -> liftIO $ throwIO  MissingConfigError
     Just conf -> pure $ RepoInit
-              <$> Just (riName conf <|> dirName path)
-              <*> Just (riFiles conf)
-              <*> Just (riDeployIP conf)
+              <$> Just (name conf <|> dirName path)
+              <*> Just (files conf)
+              <*> Just (deployIP conf)
   where
     dirName :: String -> Maybe Text
     dirName   = lastMay . fmap pack . U.split '/'
@@ -55,10 +55,10 @@ getRepoDetails = do
 archiveFiles :: ReaderT RepoInit IO String
 archiveFiles = do
   repo <- ask
-  case riName repo of
+  case name repo of
     Nothing   -> liftIO $ throwIO NoRepoName
     Just name ->
-      case riFiles repo of
+      case files repo of
         Just files -> liftIO $ gzipFiles (unpack name) files
         Nothing    -> liftIO $ gitArchiveFiles (unpack name)
 
@@ -82,9 +82,9 @@ archiveFiles = do
 uploadFile :: String -> ReaderT RepoInit IO ()
 uploadFile archivePath = do
   repo <- ask
-  let address = riDeployIP repo
+  let address = deployIP repo
   manager <- liftIO $ newManager defaultManagerSettings
-  case riName repo of
+  case name repo of
     Nothing -> throwIO NoRepoName
     Just name -> do
       initReq <- parseRequest $ unpack address ++ "/upload/" ++ unpack name
