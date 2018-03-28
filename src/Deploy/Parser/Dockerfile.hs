@@ -21,9 +21,11 @@ import           Text.Megaparsec.Error      (parseErrorPretty')
 
 type Parser = Parsec Void Text
 
+-- skip docker line comments
 lineComment :: Parser ()
 lineComment = L.skipLineComment "#"
 
+-- I am not sure whether docker has blockcomments, these are just there.
 blockComment :: Parser ()
 blockComment = L.skipBlockComment "/*" "*/"
 
@@ -33,7 +35,7 @@ spaceConsumer = L.space space1 lineComment blockComment
 lexeme :: Parser a -> Parser a
 lexeme = L.lexeme spaceConsumer
 
--- parses docker statement so that we have something like (Expose, 9999), (start, "some command")
+-- parses docker statement so that we have something like (EXPOSE, 9999), (START, "some start command")
 statement :: Parser (Text, Text)
 statement = lexeme $ do
     key   <- many letterChar
@@ -45,12 +47,15 @@ statement = lexeme $ do
 statements :: Parser [(Text, Text)]
 statements = spaceConsumer >> many statement <* eof
 
+-- Parses Dockerfile and outputs an array of [(key),(value)] where key is some dockerfile command such as RUN and value
+-- is its value
 parseDockerFile :: Text -> Either Text [(Text, Text)]
 parseDockerFile text = prettifyError $ runParser statements "" text
   where
     prettifyError = first (T.pack . parseErrorPretty' text)
 
--- The docker statement we want has exposed as key
+-- Helper function that gets us the exposed PORT in a dockerfile 
+-- The docker statement we want has EXPOSE as key
 exposedPort :: Text -> Maybe Integer
 exposedPort dockerFileContent =
     case parseDockerFile dockerFileContent of
