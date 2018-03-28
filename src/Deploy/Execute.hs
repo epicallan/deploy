@@ -3,15 +3,16 @@ module Deploy.Execute (executeDeploy) where
 
 import           Protolude
 
-import           Control.Exception.Safe (MonadMask)
-import           Data.Text              (unpack)
-import           Deploy.Types           (RepoEx (..))
-import           Data.String                  (String)
-import           Docker.Client          hiding (name, path)
-import           System.Directory       (removeDirectoryRecursive)
-import           System.Process         (callCommand)
-import System.IO (hGetContents)
-import qualified Text.Parsec            as P
+import           Control.Exception.Safe   (MonadMask)
+import           Data.String              (String)
+import           Data.Text                (unpack)
+import           Deploy.Types             (RepoEx (..))
+import           Docker.Client            hiding (name, path)
+import           System.Directory         (removeDirectoryRecursive)
+import           System.IO                (hGetContents)
+import           System.Process           (callCommand)
+
+import           Deploy.Parser.Dockerfile (exposedPort)
 
 unarchiveFile :: ReaderT RepoEx IO ()
 unarchiveFile = do
@@ -35,7 +36,7 @@ buildContainer  = do
   let uploadFilePath = rxUploadPath repo
   let imageName      = name <> ":latest"
   runDocker $ do
-    cPort    <- liftIO $ getContainerPort uploadFilePath
+    cPort   <- liftIO $ getContainerPort uploadFilePath
     eResult <-
       buildImageFromDockerfile (defaultBuildOpts imageName) (unpack uploadFilePath)
     case eResult of
@@ -50,27 +51,13 @@ buildContainer  = do
 
 -- | gets the exposed port in a docker file
 getContainerPort :: Text -> IO Integer
-getContainerPort dockerContextPath = withFile dockerfilePath ReadMode parseDockerFile
-   where
+getContainerPort dockerContextPath = withFile dockerfilePath ReadMode
+  $ \fHandle -> do
+  contents <- hGetContents fHandle
+  pure $ fromMaybe 80 (exposedPort contents)
+  where
     dockerfilePath :: String
     dockerfilePath = unpack $ dockerContextPath <> "/Dockerfile"
-
-  
-parseDockerFile :: Handle -> IO Integer
-parseDockerFile handle = do
-  contents <- hGetContents handle
-  pure 9999
-
-
--- portParseRule :: P.Parsec String () String
--- portParseRule = do
---   P.many P.digit
---   P.char ','
---   return $ P.many (P.digit <|> P.space)
-
-
-parse :: P.Stream s Identity t => P.Parsec s () a -> s -> Either P.ParseError a
-parse rule = P.parse rule "(source)"
 
 
 runContainer :: ContainerID -> IO (Either DockerError ())
