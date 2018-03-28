@@ -5,11 +5,10 @@ import           Protolude
 
 import           Control.Exception.Safe   (MonadMask)
 import           Data.String              (String)
-import           Data.Text                (pack, unpack)
+import           Data.Text                (unpack)
 import           Deploy.Types             (RepoEx (..))
 import           Docker.Client            hiding (name, path)
 import           System.Directory         (removeDirectoryRecursive)
-import           System.IO                (hGetContents)
 import           System.Process           (callCommand)
 
 import           Deploy.Parser.Dockerfile (exposedPort)
@@ -37,8 +36,8 @@ buildContainer  = do
   let imageName      = name <> ":latest"
   runDocker $ do
     cPort   <- liftIO $ getContainerPort uploadFilePath
-    eResult <-
-      buildImageFromDockerfile (defaultBuildOpts imageName) (unpack uploadFilePath)
+    -- print $ ("port: " :: Text) <> show cPort
+    eResult <- buildImageFromDockerfile (defaultBuildOpts imageName) (unpack uploadFilePath)
     case eResult of
       Left err -> pure $  Left err
       -- TODO: should delete prev container
@@ -49,12 +48,12 @@ buildContainer  = do
                               & addPortBinding (PortBinding port TCP [HostPort "0.0.0.0" port])
                               & addExposedPort (ExposedPort port TCP)
 
+
 -- | gets the exposed port in a docker file
 getContainerPort :: Text -> IO Integer
-getContainerPort dockerContextPath = withFile dockerfilePath ReadMode
-  $ \fHandle -> do
-  contents <- hGetContents fHandle
-  pure $ fromMaybe 80 (exposedPort $ pack contents)
+getContainerPort dockerContextPath = do
+  contents <- readFile dockerfilePath
+  pure $ fromMaybe 80 (exposedPort contents)
   where
     dockerfilePath :: String
     dockerfilePath = unpack $ dockerContextPath <> "/Dockerfile"
