@@ -1,4 +1,4 @@
--- | Initates project upload
+-- | Initates project upload to the deploy service
 -- - get a list of files / folders to bundle up using git if no config with specified file upload exist.
 -- - When a files or files are specified for upload, they are not archived by git.
 
