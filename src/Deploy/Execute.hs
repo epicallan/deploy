@@ -5,7 +5,7 @@ import           Protolude
 
 import           Control.Exception.Safe   (MonadMask)
 import           Data.String              (String)
-import           Data.Text                (unpack)
+import           Data.Text                (pack, unpack)
 import           Deploy.Types             (RepoEx (..))
 import           Docker.Client            hiding (name, path)
 import           System.Directory         (removeDirectoryRecursive)
@@ -54,7 +54,7 @@ getContainerPort :: Text -> IO Integer
 getContainerPort dockerContextPath = withFile dockerfilePath ReadMode
   $ \fHandle -> do
   contents <- hGetContents fHandle
-  pure $ fromMaybe 80 (exposedPort contents)
+  pure $ fromMaybe 80 (exposedPort $ pack contents)
   where
     dockerfilePath :: String
     dockerfilePath = unpack $ dockerContextPath <> "/Dockerfile"
